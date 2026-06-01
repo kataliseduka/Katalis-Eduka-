@@ -881,7 +881,7 @@ async function apiGet(action) {
   try {
     const res  = await fetch(`${API_URL}?action=${action}`);
     const data = await res.json();
-    return data.success ? data.data : null;
+    return data.ok ? data.data : null;
   } catch (e) {
     console.warn(`[K-Edu] apiGet ${action} gagal:`, e.message);
     return null;
