@@ -317,7 +317,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
         <div class="sb-admin-avatar" id="sb-avatar">A</div>
         <div>
           <div class="sb-admin-name" id="sb-name">Admin</div>
-          <div class="sb-admin-role">Super Admin</div>
+          <div class="sb-admin-role" id="sb-role">Admin</div>
         </div>
       </div>
     </div>
@@ -818,9 +818,10 @@ window.addEventListener("DOMContentLoaded", () => {
   setInterval(updateClock, 1000);
   const saved = sessionStorage.getItem("k_admin_token");
   if (saved) {
-    state.token = saved;
-    state.nama  = sessionStorage.getItem("k_admin_nama") || "Admin";
-    state.id    = sessionStorage.getItem("k_admin_id")   || "";
+    state.token   = saved;
+    state.nama    = sessionStorage.getItem("k_admin_nama")    || "Admin";
+    state.id      = sessionStorage.getItem("k_admin_id")      || "";
+    state.jabatan = sessionStorage.getItem("k_admin_jabatan") || "Admin";
     showApp();
     loadDashboard();
   }
@@ -898,12 +899,14 @@ async function doLogin() {
       errEl.textContent = "Akun ini bukan admin. Gunakan akun admin.";
       errEl.classList.add("show"); return;
     }
-    state.token = res.data.token;
-    state.nama  = res.data.nama;
-    state.id    = res.data.id;
-    sessionStorage.setItem("k_admin_token", state.token);
-    sessionStorage.setItem("k_admin_nama",  state.nama);
-    sessionStorage.setItem("k_admin_id",    state.id);
+    state.token   = res.data.token;
+    state.nama    = res.data.nama;
+    state.id      = res.data.id;
+    state.jabatan = res.data.jabatan || "Admin";
+    sessionStorage.setItem("k_admin_token",   state.token);
+    sessionStorage.setItem("k_admin_nama",    state.nama);
+    sessionStorage.setItem("k_admin_id",      state.id);
+    sessionStorage.setItem("k_admin_jabatan", state.jabatan);
     showApp();
     loadDashboard();
   } catch(e) {
@@ -916,13 +919,14 @@ async function doLogin() {
 function showApp() {
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("app").classList.add("show");
-  document.getElementById("sb-name").textContent = state.nama || "Admin";
+  document.getElementById("sb-name").textContent   = state.nama    || "Admin";
+  document.getElementById("sb-role").textContent   = state.jabatan || "Admin";
   document.getElementById("sb-avatar").textContent = (state.nama||"A")[0].toUpperCase();
 }
 
 function doLogout() {
   sessionStorage.clear();
-  state = { token:null, nama:null, id:null };
+  state = { token:null, nama:null, id:null, jabatan:null };
   cache = { peserta:[], tutor:[], tagihan:[], jadwal:[] };
   document.getElementById("login-screen").style.display = "";
   document.getElementById("app").classList.remove("show");
