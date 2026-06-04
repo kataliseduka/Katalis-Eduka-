@@ -973,13 +973,16 @@ const navConfig = {
     { id:"nilai-peserta",   icon:"📊", label:"Nilai & Progress" },
   ],
   tutor: [
-    { id:"beranda-tutor",    icon:"🏠", label:"Beranda" },
-    { id:"jadwal-tutor",     icon:"📅", label:"Jadwal Mengajar" },
-    { id:"input-nilai",      icon:"📝", label:"Input Nilai" },
-    { id:"input-absensi",    icon:"✅", label:"Input Absensi" },
+    { id:"beranda-tutor",  icon:"🏠", label:"Beranda" },
+    { id:"jadwal-tutor",   icon:"📅", label:"Jadwal Mengajar" },
+    { id:"input-nilai",    icon:"📝", label:"Input Nilai" },
+    { id:"input-absensi",  icon:"✅", label:"Input Absensi" },
   ],
   admin: [
     { id:"beranda-peserta", icon:"📊", label:"Ringkasan (Admin)" },
+  ],
+  staff: [
+    { id:"beranda-peserta", icon:"📊", label:"Ringkasan" },
   ]
 };
 
@@ -1017,17 +1020,23 @@ async function initApp() {
       const res = await apiPost("getDashboardPeserta");
       if (res.ok) {
         state.dashboardData = res.data;
+        if (res.data.rekening) state.rekening = res.data.rekening;
         renderBerandaPeserta(res.data);
+      } else {
+        toast("Gagal memuat data: " + res.error, "error");
       }
     } else if (state.role === "tutor") {
       const res = await apiPost("getDashboardTutor");
       if (res.ok) {
         state.dashboardData = res.data;
         renderBerandaTutor(res.data);
+      } else {
+        toast("Gagal memuat data: " + res.error, "error");
       }
     }
   } catch(e) {
     console.error(e);
+    toast("Error memuat dashboard: " + e.message, "error");
   } finally {
     hideLoading();
   }
@@ -1064,11 +1073,13 @@ function showPage(pageId) {
 
 async function lazyLoadPage(pageId) {
   if (state.role === "peserta") {
-    if (pageId === "jadwal-peserta") await loadJadwalPeserta();
+    if (pageId === "jadwal-peserta")  await loadJadwalPeserta();
     if (pageId === "tagihan-peserta") await loadTagihanPeserta();
-    if (pageId === "nilai-peserta") await loadNilaiPeserta();
+    if (pageId === "nilai-peserta")   await loadNilaiPeserta();
   } else if (state.role === "tutor") {
-    if (pageId === "jadwal-tutor") await loadJadwalTutor();
+    if (pageId === "jadwal-tutor")    await loadJadwalTutor();
+    if (pageId === "input-nilai")     renderInputNilaiForm();
+    if (pageId === "input-absensi")   renderInputAbsensiForm();
   }
 }
 
@@ -1120,15 +1131,21 @@ function renderBerandaPeserta(data) {
   if (!tagihanPending.length) {
     tEl.innerHTML = `<div class="empty-state"><div class="es-icon">✅</div>Tidak ada tagihan pending.</div>`;
   } else {
-    tEl.innerHTML = tagihanPending.map(t => `
+    const rekening = data.rekening || state.rekening || [];
+    const rekHtml = rekening.length
+      ? `<div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:10px;">
+           🏦 Transfer ke: ${rekening.map(r => `<strong style="color:var(--gold);">${r.bank}</strong> ${r.noRek}`).join(" · ")}
+           <span style="color:rgba(255,255,255,.35);"> — a.n. ${rekening[0]?.atasNama || ""}</span>
+         </div>` : "";
+    tEl.innerHTML = rekHtml + tagihanPending.map(t => `
       <div class="tagihan-card">
         <div class="tc-info">
           <div class="tc-nama">${t.paket||"—"}</div>
-          <div class="tc-meta">ID: ${t.id} · Jatuh tempo: ${formatTgl(t.jatuhTempo)} · Bank: ${t.bank||"—"}</div>
+          <div class="tc-meta">ID: ${t.id} · Jatuh tempo: ${formatTgl(t.jatuhTempo)}</div>
         </div>
         <div class="tc-actions">
           <div class="tc-amount">${formatRp(t.jumlah)}</div>
-          ${badgeStatus("Pending")}
+          ${badgeStatus(t.status || "Pending")}
         </div>
       </div>
     `).join("");
@@ -1204,18 +1221,48 @@ async function loadTagihanPeserta() {
   try {
     const res = await apiPost("getTagihanPeserta");
     if (!res.ok) throw new Error(res.error);
-    const rows = res.data;
-    if (!rows.length) { el.innerHTML = `<div class="empty-state"><div class="es-icon">💳</div>Belum ada tagihan.</div>`; return; }
-    el.innerHTML = rows.map(t=>`
+
+    // Response baru: {tagihan, rekening} — fallback ke array lama jika ada
+    const rows    = Array.isArray(res.data) ? res.data : (res.data.tagihan || []);
+    const rekening = Array.isArray(res.data) ? (state.rekening || []) : (res.data.rekening || state.rekening || []);
+    if (rekening.length) state.rekening = rekening;
+
+    if (!rows.length) {
+      el.innerHTML = `<div class="empty-state"><div class="es-icon">💳</div>Belum ada tagihan.</div>`;
+      return;
+    }
+
+    // Render info rekening sekali di atas daftar
+    const rekHtml = rekening.length
+      ? `<div class="section-card" style="margin-bottom:16px;border-color:rgba(201,168,76,.25);">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">🏦 Rekening Pembayaran</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
+            ${rekening.map(r => `
+              <div style="background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.12);border-radius:8px;padding:10px 12px;">
+                <div style="font-size:12px;font-weight:700;color:var(--gold);">${r.bank}</div>
+                <div style="font-size:13px;font-weight:600;margin-top:2px;">${r.noRek}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">a.n. ${r.atasNama}</div>
+              </div>`).join("")}
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:8px;">Pilih salah satu bank, lalu kirim bukti transfer di bawah.</div>
+        </div>` : "";
+
+    el.innerHTML = rekHtml + rows.map(t => `
       <div class="tagihan-card">
         <div class="tc-info">
           <div class="tc-nama">${t["Paket/Keterangan"]||"—"}</div>
-          <div class="tc-meta">ID: ${t["ID Tagihan"]} · Tanggal: ${formatTgl(t["Tgl Tagihan"])} · Jatuh tempo: ${formatTgl(t["Tgl Jatuh Tempo"])} · Bank: ${t["Bank Tujuan"]||"—"}</div>
-          ${t["No. Ref Bayar"] ? `<div class="tc-meta" style="margin-top:4px">Ref: ${t["No. Ref Bayar"]}</div>` : ""}
+          <div class="tc-meta">ID: ${t["ID Tagihan"]} · Tanggal: ${formatTgl(t["Tgl Tagihan"])} · Jatuh tempo: ${formatTgl(t["Tgl Jatuh Tempo"])}</div>
+          ${t["Mode Tagihan"] ? `<div class="tc-meta">Mode: ${t["Mode Tagihan"]}</div>` : ""}
+          ${t["No. Ref Bayar"] ? `<div class="tc-meta" style="margin-top:4px;">Ref: ${t["No. Ref Bayar"]}</div>` : ""}
+          ${t["Status"] === "Pending" || t["Status"] === "Jatuh Tempo"
+            ? `<div class="tc-meta" style="margin-top:6px;color:var(--gold);">💡 Transfer ke salah satu rekening di atas, lalu upload bukti di bawah.</div>` : ""}
         </div>
         <div class="tc-actions">
           <div class="tc-amount">${formatRp(t["Jumlah (Rp)"])}</div>
           ${badgeStatus(t["Status"])}
+          ${(t["Status"] === "Pending" || t["Status"] === "Jatuh Tempo")
+            ? `<button class="btn-sm-gold" onclick="document.getElementById('bukti-id-tagihan').value='${t["ID Tagihan"]}';document.getElementById('bukti-link').focus();" style="margin-top:4px;font-size:11px;padding:5px 10px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:6px;color:var(--gold);cursor:pointer;">📤 Upload Bukti</button>`
+            : ""}
         </div>
       </div>
     `).join("");
@@ -1368,6 +1415,25 @@ async function submitAbsensi() {
   } catch(e) {
     showAlert("absensi-alert-err", e.message, "error");
   } finally { hideLoading(); }
+}
+
+// ═══════════════════════════════════════════
+//  RENDER FORM HELPERS (untuk lazy load)
+// ═══════════════════════════════════════════
+function renderInputNilaiForm() {
+  // Form sudah ada di HTML — load daftar jadwal tutor jika belum ada
+  const sel = document.getElementById("n-id-sesi");
+  if (sel && !sel.options.length && state.dashboardData?.jadwalMengajar) {
+    state.dashboardData.jadwalMengajar.forEach(j => {
+      const opt = document.createElement("option");
+      opt.value = j["ID Jadwal"] || "";
+      opt.textContent = `${formatTgl(j["Tanggal"])} — ${j["Nama Peserta"]||""} — ${j["Mata Pelajaran"]||""}`;
+      sel.appendChild(opt);
+    });
+  }
+}
+function renderInputAbsensiForm() {
+  // Form sudah ada di HTML — tidak ada inisialisasi khusus diperlukan
 }
 
 // ═══════════════════════════════════════════

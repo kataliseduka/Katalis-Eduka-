@@ -398,7 +398,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
         <div class="stat-card red">
           <div class="stat-label">Tagihan Pending</div>
           <div class="stat-val" id="s-tagihan-pending">—</div>
-          <div class="stat-sub">Perlu dikonfirmasi</div>
+          <div class="stat-sub" id="s-tagihan-pending-rp">Perlu dikonfirmasi</div>
           <div class="stat-icon">💳</div>
         </div>
         <div class="stat-card">
@@ -410,8 +410,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
         <div class="stat-card purple">
           <div class="stat-label">Pendapatan Bulan Ini</div>
           <div class="stat-val small" id="s-pendapatan">—</div>
-          <div class="stat-sub">Tagihan lunas</div>
+          <div class="stat-sub">Tagihan lunas bulan ini</div>
           <div class="stat-icon">💰</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Total Pendapatan Lunas</div>
+          <div class="stat-val small" id="s-total-pendapatan-lunas">—</div>
+          <div class="stat-sub">Semua waktu</div>
+          <div class="stat-icon">✅</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Peserta Paket Bulanan</div>
+          <div class="stat-val" id="s-peserta-paket">—</div>
+          <div class="stat-sub">Aktif saat ini</div>
+          <div class="stat-icon">📦</div>
         </div>
       </div>
 
@@ -485,9 +497,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <table class="tbl" id="tbl-tutor">
             <thead><tr>
               <th>ID</th><th>Nama</th><th>Bidang</th><th>Mode</th>
-              <th>Tarif Online</th><th>Rating</th><th>Tgl Daftar</th><th>Status</th><th>Aksi</th>
+              <th>Tarif Online</th><th>Tarif Offline</th><th>Rating</th><th>Tgl Daftar</th><th>Status</th><th>Aksi</th>
             </tr></thead>
-            <tbody id="tbody-tutor"><tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
+            <tbody id="tbody-tutor"><tr><td colspan="10" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -674,7 +686,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-tagihan')">✕</button>
     <div class="modal-title">Buat Tagihan Baru</div>
-    <div class="modal-desc">Tagihan baru akan otomatis terkirim ke WA peserta.</div>
+    <div class="modal-desc">Tagihan baru akan otomatis terkirim ke WA peserta. Peserta memilih sendiri bank untuk transfer.</div>
     <div class="modal-alert" id="tagihan-alert"></div>
     <div class="form-grid">
       <div class="form-row">
@@ -700,27 +712,40 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <div class="form-row">
         <label class="form-label">Paket / Keterangan *</label>
         <select class="form-select" id="tf-paket">
-          <option>Sesi Per Kali</option>
-          <option>Paket 4 Sesi</option>
-          <option>Paket 8 Sesi</option>
-          <option>Paket Bulanan</option>
+          <option>Paket Bulanan Regular</option>
+          <option>Paket Bulanan Intensif</option>
+          <option>Paket Olimpiade Bulanan</option>
+          <option>Paket Skripsi/Tesis Bulanan</option>
+          <option>Paket Tahfidz Bulanan</option>
+          <option>Per Sesi</option>
           <option>Biaya Administrasi</option>
           <option>Lainnya</option>
         </select>
       </div>
       <div class="form-row">
-        <label class="form-label">Jumlah (Rp) *</label>
-        <input class="form-input" id="tf-jumlah" type="number" placeholder="150000">
+        <label class="form-label">Mode Tagihan</label>
+        <select class="form-select" id="tf-mode-tagihan">
+          <option value="Paket — Bayar di Awal">Paket — Bayar di Awal</option>
+          <option value="Per Sesi — Bayar di Akhir">Per Sesi — Bayar di Akhir</option>
+          <option value="Promo — Gratis">Promo — Gratis</option>
+        </select>
       </div>
     </div>
     <div class="form-grid">
       <div class="form-row">
+        <label class="form-label">Jumlah (Rp) *</label>
+        <input class="form-input" id="tf-jumlah" type="number" placeholder="150000">
+      </div>
+      <div class="form-row">
         <label class="form-label">Jatuh Tempo</label>
         <input class="form-input" id="tf-jatuh-tempo" type="date">
       </div>
-      <div class="form-row">
-        <label class="form-label">Bank Tujuan</label>
-        <input class="form-input" id="tf-bank" placeholder="BCA / BRI / Mandiri">
+    </div>
+    <div class="form-row" style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);border-radius:8px;padding:10px 14px;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:6px;">🏦 Rekening Pembayaran (Peserta memilih salah satu)</div>
+      <div id="tf-rekening-info" style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.8;">
+        BNI: 179 050 1510 · BRI: 6380 0103 2840 537 · SeaBank: 901 898 646 130 · Muamalat: 711 007 6475<br>
+        <em style="color:rgba(255,255,255,.4);">a.n. Muhammad Farhan Brilliant — info ini dikirim otomatis ke WA peserta</em>
       </div>
     </div>
     <div class="modal-actions">
@@ -807,7 +832,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 const API_URL = "https://script.google.com/macros/s/AKfycbz-lM8m9k7B88sjcCbdVfQWtkAJXZC1WAg4fgqiBleU6c7S8FVkxqnItt76vTRaNOzs/exec";
 
 // ── STATE ──
-let state = { token: null, nama: null, id: null };
+let state = { token: null, nama: null, id: null, jabatan: null, rekening: [] };
 let cache = { peserta: [], tutor: [], tagihan: [], jadwal: [] };
 let currentPage = "dashboard";
 let bcTarget = "semua";
@@ -958,74 +983,6 @@ async function loadDashboard() {
     const [dashRes, tagihanRes] = await Promise.all([
       apiPost("getDashboardAdmin"),
       apiPost("getAllTagihan")
-    ]);
-    hideLoading();
-
-    if (!dashRes.ok) { toast("Gagal load dashboard: " + dashRes.error, "error"); return; }
-    const d = dashRes.data.ringkasan;
-
-    // Stats
-    document.getElementById("s-peserta-aktif").textContent  = d.totalPesertaAktif;
-    document.getElementById("s-tutor-aktif").textContent    = d.totalTutorAktif;
-    document.getElementById("s-tagihan-pending").textContent = d.tagihanPending;
-    document.getElementById("s-sesi-bulan").textContent     = d.sesiBuilanIni;
-    document.getElementById("s-pendapatan").textContent     = formatRp(d.pendapatanBulanIni);
-    document.getElementById("s-peserta-baru").textContent   = "+" + d.pesertaBaru + " bulan ini";
-    document.getElementById("s-tutor-baru").textContent     = "+" + d.tutorBaru + " bulan ini";
-
-    // Badges sidebar
-    if (d.tagihanPending > 0) {
-      const b = document.getElementById("badge-tagihan-pending");
-      b.textContent = d.tagihanPending; b.style.display = "";
-    }
-
-    // Tutor pending approval
-    const tutorPending = dashRes.data.tutorPending || [];
-    const approveEl = document.getElementById("approve-list");
-    if (tutorPending.length === 0) {
-      approveEl.innerHTML = `<div class="empty-state"><div class="es-icon">✅</div><div class="es-text">Tidak ada tutor pending</div></div>`;
-    } else {
-      document.getElementById("badge-tutor-pending").textContent = tutorPending.length;
-      document.getElementById("badge-tutor-pending").style.display = "";
-      approveEl.innerHTML = tutorPending.map(t => `
-        <div class="approve-card">
-          <div class="ac-info">
-            <div class="ac-name">${t.nama}</div>
-            <div class="ac-meta">${t.id} · ${t.bidang||"—"} · ${t.jenjang||"—"}</div>
-            <div class="ac-meta" style="margin-top:2px">📱 ${t.wa||"—"}</div>
-          </div>
-          <div class="ac-actions">
-            <button class="btn btn-green btn-sm" onclick="approveTutor('${t.id}')">✅ Approve</button>
-            <button class="btn btn-red btn-sm" onclick="updateTutorStatus('${t.id}','Nonaktif')">❌ Tolak</button>
-          </div>
-        </div>`).join("");
-    }
-
-    // Tagihan pending dari getAllTagihan
-    if (tagihanRes.ok) {
-      cache.tagihan = tagihanRes.data;
-      const pending = tagihanRes.data.filter(t =>
-        t["Status"] === "Menunggu Konfirmasi" || t["Status"] === "Pending Verifikasi"
-      ).slice(0, 5);
-      const tpEl = document.getElementById("tagihan-pending-list");
-      if (pending.length === 0) {
-        tpEl.innerHTML = `<div class="empty-state"><div class="es-icon">💚</div><div class="es-text">Semua sudah terkonfirmasi</div></div>`;
-      } else {
-        tpEl.innerHTML = pending.map(t => `
-          <div class="approve-card">
-            <div class="ac-info">
-              <div class="ac-name">${t["Nama Peserta"]||"—"}</div>
-              <div class="ac-meta">${t["ID Tagihan"]} · ${t["Paket/Keterangan"]||"—"} · <strong>${formatRp(t["Jumlah (Rp)"])}</strong></div>
-            </div>
-            <button class="btn btn-gold btn-sm" onclick="openKonfirmasiModal('${t["ID Tagihan"]}','${(t["Nama Peserta"]||"").replace(/'/g,"\\'")}','${t["Jumlah (Rp)"]}')">Konfirmasi</button>
-          </div>`).join("");
-      }
-    }
-  } catch(e) {
-    hideLoading();
-    toast("Error: " + e.message, "error");
-  }
-}
 
 // ── PESERTA ──
 async function loadPeserta() {
@@ -1065,7 +1022,7 @@ function renderPeserta(rows) {
       <td>${badgeStatus(r["Status"])}</td>
       <td>
         <div style="display:flex;gap:6px;">
-          <button class="btn btn-outline btn-sm" onclick="showDetailPeserta(${JSON.stringify(JSON.stringify(r))})">Detail</button>
+          <button class="btn btn-outline btn-sm" onclick="showDetailPeserta(decodeURIComponent('${encodeURIComponent(JSON.stringify(r))}'))">Detail</button>
           ${r["Status"]==="Aktif"
             ? `<button class="btn btn-red btn-sm" onclick="updatePesertaStatus('${r["ID Peserta"]}','Nonaktif')">Nonaktifkan</button>`
             : `<button class="btn btn-green btn-sm" onclick="updatePesertaStatus('${r["ID Peserta"]}','Aktif')">Aktifkan</button>`
@@ -1137,7 +1094,7 @@ function renderTutor(rows) {
     return match && (!st || r["Status"] === st);
   });
   const tbody = document.getElementById("tbody-tutor");
-  if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Tidak ada data.</td></tr>`; return; }
+  if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Tidak ada data.</td></tr>`; return; }
   tbody.innerHTML = filtered.map(r => `
     <tr>
       <td><span style="font-size:11px;color:var(--gold);font-weight:600;">${r["ID Tutor"]||"—"}</span></td>
@@ -1145,12 +1102,13 @@ function renderTutor(rows) {
       <td>${r["Bidang Keahlian"]||"—"}</td>
       <td>${r["Mode Mengajar"]||"—"}</td>
       <td>${formatRp(r["Tarif Online (Rp)"])}</td>
+      <td>${r["Tarif Offline (Rp)"] ? formatRp(r["Tarif Offline (Rp)"]) : "—"}</td>
       <td>${r["Rating"]||"—"} ⭐</td>
       <td>${formatTgl(r["Tgl Daftar"])}</td>
       <td>${badgeStatus(r["Status"])}</td>
       <td>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="btn btn-outline btn-sm" onclick="showDetailTutor(${JSON.stringify(JSON.stringify(r))})">Detail</button>
+          <button class="btn btn-outline btn-sm" onclick="showDetailTutor(decodeURIComponent('${encodeURIComponent(JSON.stringify(r))}'))">Detail</button>
           ${r["Status"]==="Pending"
             ? `<button class="btn btn-green btn-sm" onclick="approveTutor('${r["ID Tutor"]}')">✅ Approve</button>`
             : ""}
@@ -1290,8 +1248,16 @@ async function doKonfirmasiBayar() {
 
 // ── TAMBAH TAGIHAN ──
 function openTambahTagihanModal() {
-  ["tf-id-peserta","tf-nama-peserta","tf-id-tutor","tf-nama-tutor","tf-jumlah","tf-bank"].forEach(id => document.getElementById(id).value = "");
+  ["tf-id-peserta","tf-nama-peserta","tf-id-tutor","tf-nama-tutor","tf-jumlah"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("tf-paket").selectedIndex = 0;
+  document.getElementById("tf-mode-tagihan").selectedIndex = 0;
+  document.getElementById("tf-jatuh-tempo").value = "";
+  // Update rekening info dari state jika tersedia
+  if (state.rekening && state.rekening.length) {
+    const rek = state.rekening.map(r => `${r.bank}: ${r.noRek}`).join(" · ");
+    const info = document.getElementById("tf-rekening-info");
+    if (info) info.innerHTML = rek + `<br><em style="color:rgba(255,255,255,.4);">a.n. ${state.rekening[0].atasNama} — dikirim otomatis ke WA peserta</em>`;
+  }
   hideAlert("tagihan-alert");
   openModal("modal-tagihan");
 }
@@ -1310,18 +1276,18 @@ async function doTambahTagihan() {
   try {
     const res = await apiPost("tambahTagihan", {
       idPeserta,
-      namaPeserta: document.getElementById("tf-nama-peserta").value.trim(),
-      idTutor:     document.getElementById("tf-id-tutor").value.trim(),
-      namaTutor:   document.getElementById("tf-nama-tutor").value.trim(),
-      paket:       document.getElementById("tf-paket").value,
-      jumlah:      parseFloat(jumlah),
-      jatuhTempo:  document.getElementById("tf-jatuh-tempo").value,
-      bank:        document.getElementById("tf-bank").value.trim()
+      namaPeserta:  document.getElementById("tf-nama-peserta").value.trim(),
+      idTutor:      document.getElementById("tf-id-tutor").value.trim(),
+      namaTutor:    document.getElementById("tf-nama-tutor").value.trim(),
+      paket:        document.getElementById("tf-paket").value,
+      modeTagihan:  document.getElementById("tf-mode-tagihan").value,
+      jumlah:       parseFloat(jumlah),
+      jatuhTempo:   document.getElementById("tf-jatuh-tempo").value
     });
     hideLoading();
     if (!res.ok) { showAlert("tagihan-alert", res.error, "error"); return; }
     closeModal("modal-tagihan");
-    toast("✅ Tagihan dibuat! WA terkirim ke peserta.", "success");
+    toast("✅ Tagihan dibuat! WA + info rekening terkirim ke peserta.", "success");
     cache.tagihan = [];
     if (currentPage === "tagihan") loadTagihan();
   } catch(e) { hideLoading(); showAlert("tagihan-alert", e.message, "error"); }
