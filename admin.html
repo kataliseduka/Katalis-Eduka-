@@ -1014,10 +1014,15 @@ async function loadDashboard() {
       state.rekening = dashRes.data.rekening;
     }
 
-    // Badge sidebar tagihan pending
-    if (d.tagihanPending > 0) {
-      const b = document.getElementById("badge-tagihan-pending");
-      if (b) { b.textContent = d.tagihanPending; b.style.display = ""; }
+    // Badge sidebar tagihan pending — selalu update (hide jika 0)
+    const badgeTagihan = document.getElementById("badge-tagihan-pending");
+    if (badgeTagihan) {
+      if (d.tagihanPending > 0) {
+        badgeTagihan.textContent = d.tagihanPending;
+        badgeTagihan.style.display = "";
+      } else {
+        badgeTagihan.style.display = "none";
+      }
     }
 
     // Tutor pending approval
@@ -1275,7 +1280,18 @@ async function loadTagihan() {
     if (!res.ok) { toast("Gagal: " + res.error, "error"); return; }
     cache.tagihan = res.data;
     renderTagihan(cache.tagihan);
+    updateBadgeTagihan(cache.tagihan);
   } catch(e) { hideLoading(); toast("Error: " + e.message, "error"); }
+}
+
+function updateBadgeTagihan(rows) {
+  const pending = (rows || []).filter(r =>
+    ["Pending", "Jatuh Tempo", "Menunggu Konfirmasi", "Pending Verifikasi"].includes(r["Status"])
+  ).length;
+  const b = document.getElementById("badge-tagihan-pending");
+  if (!b) return;
+  if (pending > 0) { b.textContent = pending; b.style.display = ""; }
+  else { b.style.display = "none"; }
 }
 
 function renderTagihan(rows) {
