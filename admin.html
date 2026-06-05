@@ -983,6 +983,92 @@ async function loadDashboard() {
     const [dashRes, tagihanRes] = await Promise.all([
       apiPost("getDashboardAdmin"),
       apiPost("getAllTagihan")
+    ]);
+    hideLoading();
+
+    if (!dashRes.ok) { toast("Gagal load dashboard: " + dashRes.error, "error"); return; }
+    const d = dashRes.data.ringkasan;
+
+    // Stats utama
+    document.getElementById("s-peserta-aktif").textContent   = d.totalPesertaAktif;
+    document.getElementById("s-tutor-aktif").textContent     = d.totalTutorAktif;
+    document.getElementById("s-tagihan-pending").textContent = d.tagihanPending;
+    document.getElementById("s-sesi-bulan").textContent      = d.sesiBuilanIni;
+    document.getElementById("s-pendapatan").textContent      = formatRp(d.pendapatanBulanIni);
+    document.getElementById("s-peserta-baru").textContent    = "+" + d.pesertaBaru + " bulan ini";
+    document.getElementById("s-tutor-baru").textContent      = "+" + d.tutorBaru + " bulan ini";
+
+    // Stats tambahan
+    const sPaket = document.getElementById("s-peserta-paket");
+    if (sPaket) sPaket.textContent = d.pesertaPaketBulanan || 0;
+    const sTotalLunas = document.getElementById("s-total-pendapatan-lunas");
+    if (sTotalLunas) sTotalLunas.textContent = formatRp(d.totalPendapatanLunas || 0);
+    const sPendingRp = document.getElementById("s-tagihan-pending-rp");
+    if (sPendingRp) sPendingRp.textContent = formatRp(d.tagihanPendingRp || 0);
+
+    // Simpan rekening dari config
+    if (dashRes.data.rekening && dashRes.data.rekening.length) {
+      state.rekening = dashRes.data.rekening;
+    }
+
+    // Badge sidebar tagihan pending
+    if (d.tagihanPending > 0) {
+      const b = document.getElementById("badge-tagihan-pending");
+      if (b) { b.textContent = d.tagihanPending; b.style.display = ""; }
+    }
+
+    // Tutor pending approval
+    const tutorPending = dashRes.data.tutorPending || [];
+    const approveEl = document.getElementById("approve-list");
+    if (approveEl) {
+      if (tutorPending.length === 0) {
+        approveEl.innerHTML = `<div class="empty-state"><div class="es-icon">✅</div><div class="es-text">Tidak ada tutor pending</div></div>`;
+      } else {
+        const bp = document.getElementById("badge-tutor-pending");
+        if (bp) { bp.textContent = tutorPending.length; bp.style.display = ""; }
+        approveEl.innerHTML = tutorPending.map(t => `
+          <div class="approve-card">
+            <div class="ac-info">
+              <div class="ac-name">${t.nama}</div>
+              <div class="ac-meta">${t.id} · ${t.bidang||"—"} · ${t.jenjang||"—"}</div>
+              <div class="ac-meta" style="margin-top:2px">📱 ${t.wa||"—"}</div>
+            </div>
+            <div class="ac-actions">
+              <button class="btn btn-green btn-sm" onclick="approveTutor('${t.id}')">✅ Approve</button>
+              <button class="btn btn-red btn-sm" onclick="updateTutorStatus('${t.id}','Nonaktif')">❌ Tolak</button>
+            </div>
+          </div>`).join("");
+      }
+    }
+
+    // Tagihan pending dari getAllTagihan
+    if (tagihanRes.ok) {
+      cache.tagihan = tagihanRes.data;
+      const pending = tagihanRes.data.filter(t =>
+        ["Pending", "Jatuh Tempo", "Menunggu Konfirmasi", "Pending Verifikasi"].includes(t["Status"])
+      ).slice(0, 5);
+      const tpEl = document.getElementById("tagihan-pending-list");
+      if (tpEl) {
+        if (pending.length === 0) {
+          tpEl.innerHTML = `<div class="empty-state"><div class="es-icon">💚</div><div class="es-text">Semua sudah terkonfirmasi</div></div>`;
+        } else {
+          tpEl.innerHTML = pending.map(t => `
+            <div class="approve-card">
+              <div class="ac-info">
+                <div class="ac-name">${t["Nama Peserta"]||"—"}</div>
+                <div class="ac-meta">${t["ID Tagihan"]} · ${t["Paket/Keterangan"]||"—"} · <strong>${formatRp(t["Jumlah (Rp)"])}</strong></div>
+                <div class="ac-meta">Status: ${t["Status"]||"—"} · Jatuh Tempo: ${formatTgl(t["Tgl Jatuh Tempo"])}</div>
+              </div>
+              <button class="btn btn-gold btn-sm" onclick="openKonfirmasiModal('${t["ID Tagihan"]}','${(t["Nama Peserta"]||"").replace(/'/g,"\\'")}','${t["Jumlah (Rp)"]}')">Konfirmasi</button>
+            </div>`).join("");
+        }
+      }
+    }
+  } catch(e) {
+    hideLoading();
+    toast("Error: " + e.message, "error");
+  }
+}
 
 // ── PESERTA ──
 async function loadPeserta() {
