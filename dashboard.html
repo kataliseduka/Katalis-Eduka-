@@ -872,9 +872,14 @@ function getSalam() {
 
 function showAlert(id, msg, type = "success") {
   const el = document.getElementById(id);
-  el.textContent = (type === "success" ? "✅ " : "❌ ") + msg;
+  if (!el) return;
+  el.textContent = msg;
   el.style.display = "block";
-  setTimeout(() => { el.style.display = "none"; }, 5000);
+  setTimeout(() => { if (el) el.style.display = "none"; }, 6000);
+}
+function hideAlert(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = "none";
 }
 
 // ═══════════════════════════════════════════
@@ -1261,7 +1266,7 @@ async function loadTagihanPeserta() {
           <div class="tc-amount">${formatRp(t["Jumlah (Rp)"])}</div>
           ${badgeStatus(t["Status"])}
           ${(t["Status"] === "Pending" || t["Status"] === "Jatuh Tempo")
-            ? `<button class="btn-sm-gold" onclick="document.getElementById('bukti-id-tagihan').value='${t["ID Tagihan"]}';document.getElementById('bukti-link').focus();" style="margin-top:4px;font-size:11px;padding:5px 10px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:6px;color:var(--gold);cursor:pointer;">📤 Upload Bukti</button>`
+            ? `<button class="btn-sm-gold" onclick="document.getElementById('bukti-id-tagihan').value='${t["ID Tagihan"]}';document.getElementById('bukti-link').focus();document.getElementById('bukti-link').closest('section,div.section-card,[id]').scrollIntoView&&document.querySelector('#page-tagihan-peserta').scrollTop=9999;" style="margin-top:4px;font-size:11px;padding:5px 10px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:6px;color:var(--gold);cursor:pointer;">📤 Upload Bukti</button>`
             : ""}
         </div>
       </div>
@@ -1345,19 +1350,29 @@ async function loadJadwalTutor() {
 async function uploadBukti() {
   const idTagihan = document.getElementById("bukti-id-tagihan").value.trim();
   const linkBukti = document.getElementById("bukti-link").value.trim();
-  if (!idTagihan || !linkBukti) { showAlert("bukti-alert-err","ID Tagihan dan link wajib diisi.","error"); return; }
+
+  if (!idTagihan) { showAlert("bukti-alert-err", "ID Tagihan wajib diisi. Klik tombol 'Upload Bukti' di tagihan terkait.", "error"); return; }
+  if (!linkBukti) { showAlert("bukti-alert-err", "Link bukti transfer wajib diisi (Google Drive / foto).", "error"); return; }
+  if (!linkBukti.startsWith("http")) { showAlert("bukti-alert-err", "Link harus diawali https://", "error"); return; }
 
   showLoading("Mengirim bukti bayar...");
   try {
     const res = await apiPost("uploadBuktiBayar", { idTagihan, linkBukti });
+    hideLoading();
     if (!res.ok) throw new Error(res.error);
-    showAlert("bukti-alert-ok", res.data.pesan || "Berhasil dikirim!");
+
+    // Clear form dan tampilkan sukses
     document.getElementById("bukti-id-tagihan").value = "";
     document.getElementById("bukti-link").value = "";
+    hideAlert("bukti-alert-err");
+    showAlert("bukti-alert-ok", "✅ " + (res.data?.pesan || "Bukti berhasil dikirim! Admin akan konfirmasi dalam 1×24 jam."), "success");
+
+    // Refresh list tagihan
     await loadTagihanPeserta();
   } catch(e) {
-    showAlert("bukti-alert-err", e.message, "error");
-  } finally { hideLoading(); }
+    hideLoading();
+    showAlert("bukti-alert-err", "❌ " + e.message, "error");
+  }
 }
 
 // ═══════════════════════════════════════════

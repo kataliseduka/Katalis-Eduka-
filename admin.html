@@ -555,7 +555,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <table class="tbl">
             <thead><tr>
               <th>ID Tagihan</th><th>Peserta</th><th>Paket</th><th>Jumlah</th>
-              <th>Tgl Tagihan</th><th>Jatuh Tempo</th><th>Bank</th><th>Status</th><th>Aksi</th>
+              <th>Tgl Tagihan</th><th>Jatuh Tempo</th><th>Bukti Bayar</th><th>Status</th><th>Aksi</th>
             </tr></thead>
             <tbody id="tbody-tagihan"><tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
           </table>
@@ -670,9 +670,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <label class="form-label">Jumlah</label>
       <input class="form-input" id="kf-jumlah" readonly style="opacity:.6;">
     </div>
+    <div id="kf-bukti-preview" style="display:none;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:13px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px;">Bukti Transfer dari Peserta</div>
+    </div>
     <div class="form-row">
-      <label class="form-label">No. Referensi (opsional)</label>
-      <input class="form-input" id="kf-noref" placeholder="Cth: TRF-20250529-001">
+      <label class="form-label">No. Referensi / Catatan (opsional)</label>
+      <input class="form-input" id="kf-noref" placeholder="Cth: TRF-20250529-001 atau kosongkan">
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-konfirmasi')">Batal</button>
@@ -1285,7 +1288,13 @@ function renderTagihan(rows) {
   });
   const tbody = document.getElementById("tbody-tagihan");
   if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Tidak ada data.</td></tr>`; return; }
-  tbody.innerHTML = filtered.map(r => `
+  tbody.innerHTML = filtered.map(r => {
+    const bukti = r["No. Ref Bayar"] || "";
+    const isBuktiBayar = bukti && (bukti.startsWith("http") || bukti.startsWith("https"));
+    const buktiHtml = isBuktiBayar
+      ? `<a href="${bukti}" target="_blank" style="color:var(--gold);font-size:11px;text-decoration:underline;">🔗 Lihat Bukti</a>`
+      : bukti ? `<span style="font-size:11px;">${bukti}</span>` : `<span style="color:rgba(255,255,255,.25);font-size:11px;">—</span>`;
+    return `
     <tr>
       <td><span style="font-size:11px;color:var(--gold);font-weight:600;">${r["ID Tagihan"]||"—"}</span></td>
       <td>${r["Nama Peserta"]||"—"}<div style="font-size:10px;color:rgba(255,255,255,.35);">${r["ID Peserta"]||""}</div></td>
@@ -1293,25 +1302,36 @@ function renderTagihan(rows) {
       <td style="font-weight:600;">${formatRp(r["Jumlah (Rp)"])}</td>
       <td>${formatTgl(r["Tgl Tagihan"])}</td>
       <td>${formatTgl(r["Tgl Jatuh Tempo"])}</td>
-      <td>${r["Bank Tujuan"]||"—"}</td>
+      <td>${buktiHtml}</td>
       <td>${badgeStatus(r["Status"])}</td>
       <td>
         ${(r["Status"]==="Menunggu Konfirmasi"||r["Status"]==="Pending Verifikasi")
-          ? `<button class="btn btn-gold btn-sm" onclick="openKonfirmasiModal('${r["ID Tagihan"]}','${(r["Nama Peserta"]||"").replace(/'/g,"\\'")}','${r["Jumlah (Rp)"]}')">Konfirmasi</button>`
+          ? `<button class="btn btn-gold btn-sm" onclick="openKonfirmasiModal('${r["ID Tagihan"]}','${(r["Nama Peserta"]||"").replace(/'/g,"\\'")}','${r["Jumlah (Rp)"]}','${bukti.replace(/'/g,"\\'")}')">✅ Konfirmasi</button>`
           : r["Status"]==="Lunas"
           ? `<span style="font-size:11px;color:var(--green);">✅ ${formatTgl(r["Tgl Bayar"])}</span>`
-          : `<span style="font-size:11px;color:rgba(255,255,255,.3);">Pending</span>`}
+          : `<span style="font-size:11px;color:rgba(255,255,255,.3);">Menunggu</span>`}
       </td>
-    </tr>`).join("");
+    </tr>`;
+  }).join("");
 }
 
 function filterTagihan() { renderTagihan(cache.tagihan); }
 
-function openKonfirmasiModal(id, nama, jumlah) {
+function openKonfirmasiModal(id, nama, jumlah, bukti) {
   document.getElementById("kf-id").value     = id;
   document.getElementById("kf-nama").value   = nama;
   document.getElementById("kf-jumlah").value = formatRp(jumlah);
-  document.getElementById("kf-noref").value  = "";
+  document.getElementById("kf-noref").value  = bukti || "";
+  // Tampilkan link bukti bayar jika ada
+  const buktiEl = document.getElementById("kf-bukti-preview");
+  if (buktiEl) {
+    if (bukti && bukti.startsWith("http")) {
+      buktiEl.innerHTML = `<a href="${bukti}" target="_blank" style="color:var(--gold);font-weight:600;">🔗 Lihat Bukti Transfer</a>`;
+      buktiEl.style.display = "";
+    } else {
+      buktiEl.style.display = "none";
+    }
+  }
   hideAlert("konfirmasi-alert");
   openModal("modal-konfirmasi");
 }
