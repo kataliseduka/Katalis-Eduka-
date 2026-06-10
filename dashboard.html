@@ -304,6 +304,8 @@ body {
 .df-input:focus, .df-select:focus, .df-textarea:focus { border-color:rgba(201,168,76,.5); }
 .df-select option { background:var(--navy-2);color:var(--white); }
 .df-textarea { resize:vertical;min-height:80px; }
+.btn-sm-outline{font-size:11px;padding:5px 12px;background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:6px;color:rgba(255,255,255,.5);cursor:pointer;}
+.btn-sm-outline:hover{border-color:var(--gold);color:var(--gold);}
 .btn-primary {
   padding:10px 22px;border-radius:9px;border:none;cursor:pointer;
   background:linear-gradient(135deg,var(--gold),var(--gold-3));
@@ -566,12 +568,24 @@ body {
         <div class="page-header">
           <div class="page-kicker">Jadwal Saya</div>
           <h2 class="page-title">Jadwal <em>Belajar</em></h2>
-          <p class="page-desc">Seluruh sesi belajar yang terjadwal.</p>
+          <p class="page-desc">Rekap jadwal bimbingan rutin kamu bersama tutor.</p>
         </div>
-        <div class="section-card">
-          <div class="sc-header"><div class="sc-title">Semua Jadwal</div></div>
+
+        <!-- Kartu jadwal rekap -->
+        <div id="jadwal-rekap-list">
+          <div class="empty-state"><div class="es-icon">📅</div>Memuat jadwal...</div>
+        </div>
+
+        <!-- Riwayat absensi sesi -->
+        <div class="section-card" style="margin-top:20px">
+          <div class="sc-header">
+            <div class="sc-title">📋 Riwayat Sesi Belajar</div>
+            <div class="sc-action"><button class="btn-sm-outline" onclick="loadAbsensiPeserta()">🔄 Refresh</button></div>
+          </div>
           <div class="sc-body">
-            <div id="jadwal-full-list"><div class="empty-state"><div class="es-icon">📅</div>Memuat...</div></div>
+            <div id="absensi-peserta-list">
+              <div class="empty-state"><div class="es-icon">📋</div>Belum ada riwayat sesi.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -712,57 +726,77 @@ body {
         <div class="page-header">
           <div class="page-kicker">Absensi</div>
           <h2 class="page-title">Input <em>Absensi</em></h2>
-          <p class="page-desc">Catat kehadiran peserta dan tutor per sesi.</p>
+          <p class="page-desc">Catat kehadiran & upload foto bersama peserta sebagai bukti sesi.</p>
         </div>
         <div class="section-card">
           <div class="sc-header"><div class="sc-title">✅ Form Absensi Sesi</div></div>
           <div class="sc-body">
-            <div class="alert alert-success" id="absensi-alert-ok">✅ Absensi berhasil disimpan!</div>
+            <div class="alert alert-success" id="absensi-alert-ok"></div>
             <div class="alert alert-error" id="absensi-alert-err"></div>
+
+            <!-- Info penting -->
+            <div style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:rgba(255,255,255,.7);line-height:1.7;">
+              📸 <strong style="color:var(--gold);">Foto bukti wajib diisi</strong> — Upload foto bersama peserta saat sesi berlangsung ke Google Drive, lalu tempel link-nya di bawah.
+            </div>
+
             <div class="dash-form">
-              <div class="df-row">
-                <div>
-                  <label class="df-label">ID Sesi</label>
-                  <input class="df-input" id="ab-id-sesi" placeholder="SES-001">
-                </div>
-                <div>
-                  <label class="df-label">ID Jadwal</label>
-                  <input class="df-input" id="ab-id-jadwal" placeholder="JDW-001">
-                </div>
+              <!-- Pilih jadwal dari dropdown -->
+              <div>
+                <label class="df-label">Pilih Jadwal * <span style="color:rgba(255,255,255,.4);font-weight:400;">(pilih jadwal yang sedang berlangsung)</span></label>
+                <select class="df-select" id="ab-id-jadwal" onchange="onJadwalAbsensiChange()">
+                  <option value="">— Pilih Jadwal —</option>
+                </select>
               </div>
+
+              <!-- Info otomatis dari jadwal -->
+              <div id="ab-jadwal-info" style="display:none;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px 14px;font-size:12px;color:rgba(255,255,255,.7);line-height:1.8;margin-bottom:4px;">
+              </div>
+
               <div class="df-row">
                 <div>
-                  <label class="df-label">Nama Peserta</label>
-                  <input class="df-input" id="ab-nama-peserta" placeholder="Nama peserta">
+                  <label class="df-label">Tanggal Sesi *</label>
+                  <input class="df-input" id="ab-tanggal" type="date">
                 </div>
                 <div>
-                  <label class="df-label">Kehadiran Peserta</label>
+                  <label class="df-label">Kehadiran Peserta *</label>
                   <select class="df-select" id="ab-hadir-peserta">
-                    <option value="Hadir">Hadir</option>
-                    <option value="Tidak Hadir">Tidak Hadir</option>
-                    <option value="Izin">Izin</option>
+                    <option value="Hadir">✅ Hadir</option>
+                    <option value="Tidak Hadir">❌ Tidak Hadir</option>
+                    <option value="Izin">📋 Izin</option>
                   </select>
                 </div>
               </div>
-              <div class="df-row">
-                <div>
-                  <label class="df-label">Nama Tutor</label>
-                  <input class="df-input" id="ab-nama-tutor" placeholder="Nama tutor">
-                </div>
-                <div>
-                  <label class="df-label">Kehadiran Tutor</label>
-                  <select class="df-select" id="ab-hadir-tutor">
-                    <option value="Hadir">Hadir</option>
-                    <option value="Tidak Hadir">Tidak Hadir</option>
-                    <option value="Izin">Izin</option>
-                  </select>
-                </div>
+
+              <div>
+                <label class="df-label">Materi Sesi</label>
+                <input class="df-input" id="ab-materi" placeholder="Contoh: Persamaan Linear, BAB 3 Metodologi...">
               </div>
+
+              <div>
+                <label class="df-label">📸 Foto Bukti Kehadiran (Link Google Drive / foto) *</label>
+                <input class="df-input" id="ab-foto-bukti" placeholder="https://drive.google.com/file/d/..." style="border-color:rgba(201,168,76,.4);">
+                <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:4px;">Upload foto ke Google Drive → klik kanan → "Bagikan" → salin link → tempel di sini.</div>
+              </div>
+
               <div>
                 <label class="df-label">Catatan Sesi</label>
-                <textarea class="df-textarea" id="ab-catatan" placeholder="Sesi berjalan lancar, peserta aktif..."></textarea>
+                <textarea class="df-textarea" id="ab-catatan" placeholder="Sesi berjalan lancar. Peserta aktif bertanya. Perlu latihan soal lebih banyak..."></textarea>
               </div>
-              <button class="btn-primary" onclick="submitAbsensi()">Simpan Absensi</button>
+
+              <button class="btn-primary" onclick="submitAbsensi()" id="btn-submit-absensi">📸 Simpan Absensi</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Riwayat absensi tutor -->
+        <div class="section-card" style="margin-top:20px">
+          <div class="sc-header">
+            <div class="sc-title">📋 Riwayat Absensi Kamu</div>
+            <div class="sc-action"><button class="btn-sm-outline" onclick="loadRiwayatAbsensiTutor()">🔄 Refresh</button></div>
+          </div>
+          <div class="sc-body">
+            <div id="riwayat-absensi-tutor">
+              <div class="empty-state"><div class="es-icon">📋</div>Belum ada riwayat absensi.</div>
             </div>
           </div>
         </div>
@@ -848,7 +882,8 @@ function badgeKategoriNilai(k) {
 
 function badgeStatus(s) {
   const map = {
-    "Lunas":"badge-green","Aktif":"badge-green","Terjadwal":"badge-blue",
+    "Lunas":"badge-green","Aktif":"badge-green","Terjadwal":"badge-blue","Hadir":"badge-green",
+    "Tidak Hadir":"badge-red","Izin":"badge-gold","Menunggu Konfirmasi":"badge-gold",
     "Pending":"badge-orange","Menunggu Konfirmasi":"badge-orange",
     "Batal":"badge-red","Nonaktif":"badge-red","Pending Verifikasi":"badge-orange"
   };
@@ -1078,13 +1113,13 @@ function showPage(pageId) {
 
 async function lazyLoadPage(pageId) {
   if (state.role === "peserta") {
-    if (pageId === "jadwal-peserta")  await loadJadwalPeserta();
+    if (pageId === "jadwal-peserta")  { await loadJadwalPeserta(); loadAbsensiPeserta(); }
     if (pageId === "tagihan-peserta") await loadTagihanPeserta();
     if (pageId === "nilai-peserta")   await loadNilaiPeserta();
   } else if (state.role === "tutor") {
     if (pageId === "jadwal-tutor")    await loadJadwalTutor();
     if (pageId === "input-nilai")     renderInputNilaiForm();
-    if (pageId === "input-absensi")   renderInputAbsensiForm();
+    if (pageId === "input-absensi")   { renderInputAbsensiForm(); loadRiwayatAbsensiTutor(); }
   }
 }
 
@@ -1193,25 +1228,93 @@ function renderBerandaTutor(data) {
 }
 
 // ═══════════════════════════════════════════
-//  LOAD: JADWAL PESERTA (FULL)
+//  LOAD: JADWAL REKAP PESERTA
 // ═══════════════════════════════════════════
+const hariOrder = { "Senin":1,"Selasa":2,"Rabu":3,"Kamis":4,"Jumat":5,"Sabtu":6,"Minggu":7 };
+
 async function loadJadwalPeserta() {
-  const el = document.getElementById("jadwal-full-list");
+  const el = document.getElementById("jadwal-rekap-list");
   el.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div>Memuat jadwal...</div>`;
   try {
     const res = await apiPost("getJadwalPeserta");
     if (!res.ok) throw new Error(res.error);
     const rows = res.data;
-    if (!rows.length) { el.innerHTML = `<div class="empty-state"><div class="es-icon">📅</div>Belum ada jadwal.</div>`; return; }
-    el.innerHTML = `<table class="tbl"><thead><tr><th>Tanggal</th><th>Jam</th><th>Mapel</th><th>Tutor</th><th>Mode</th><th>Status</th></tr></thead>
-    <tbody>${rows.map(r=>`<tr>
-      <td>${r["Hari"]||""} ${formatTgl(r["Tanggal"])}</td>
-      <td>${r["Jam Mulai"]||""}–${r["Jam Selesai"]||""}</td>
-      <td>${r["Mata Pelajaran"]||"—"}</td>
-      <td>${r["Nama Tutor"]||"—"}</td>
-      <td>${r["Mode"]||"—"}</td>
-      <td>${badgeStatus(r["Status"])}</td>
-    </tr>`).join("")}</tbody></table>`;
+    if (!rows.length) {
+      el.innerHTML = `<div class="empty-state"><div class="es-icon">📅</div>Belum ada jadwal. Hubungi admin untuk mengatur jadwal belajarmu.</div>`;
+      return;
+    }
+
+    // Sort berdasarkan hari
+    rows.sort((a, b) => (hariOrder[a.hariBelajar?.split(",")[0]?.trim()] || 9) - (hariOrder[b.hariBelajar?.split(",")[0]?.trim()] || 9));
+
+    el.innerHTML = rows.map(r => {
+      const modeIcon = r.mode === "Offline" ? "🏠" : "💻";
+      const modeColor = r.mode === "Offline" ? "rgba(100,200,120,.15)" : "rgba(100,150,255,.1)";
+      const modeBorder = r.mode === "Offline" ? "rgba(100,200,120,.25)" : "rgba(100,150,255,.2)";
+      return `
+      <div class="section-card" style="margin-bottom:14px;border-left:3px solid var(--gold);">
+        <div class="sc-body" style="padding:16px 18px;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;">${r.mapel || "—"}</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:10px;">${r.idJadwal}</div>
+
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                <!-- Hari belajar badge -->
+                ${(r.hariBelajar || "").split(",").map(h => `
+                  <span style="background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--gold);">
+                    📆 ${h.trim()}
+                  </span>`).join("")}
+                <!-- Jam -->
+                <span style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:4px 12px;font-size:12px;color:rgba(255,255,255,.7);">
+                  ⏰ ${r.jamMulai || "—"}–${r.jamSelesai || "—"}
+                </span>
+                <!-- Mode -->
+                <span style="background:${modeColor};border:1px solid ${modeBorder};border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">
+                  ${modeIcon} ${r.mode || "—"}
+                </span>
+              </div>
+
+              <div style="font-size:12px;color:rgba(255,255,255,.6);">
+                👨‍🏫 <strong>${r.namaTutor || "—"}</strong>
+                ${r.lokasi ? `<span style="margin-left:10px;">📍 ${r.lokasi}</span>` : ""}
+              </div>
+            </div>
+            <div>${badgeStatus(r.status || "Aktif")}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${e.message}</div>`;
+  }
+}
+
+async function loadAbsensiPeserta() {
+  const el = document.getElementById("absensi-peserta-list");
+  el.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div>Memuat riwayat...</div>`;
+  try {
+    const res = await apiPost("getAbsensiPeserta");
+    if (!res.ok) throw new Error(res.error);
+    const rows = res.data;
+    if (!rows.length) {
+      el.innerHTML = `<div class="empty-state"><div class="es-icon">📋</div>Belum ada riwayat sesi.</div>`;
+      return;
+    }
+    el.innerHTML = `<table class="tbl">
+      <thead><tr><th>Tanggal</th><th>Hari</th><th>Materi</th><th>Tutor</th><th>Hadir</th><th>Foto Bukti</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td>${formatTgl(r["Tanggal"])}</td>
+        <td>${r["Hari"] || "—"}</td>
+        <td style="max-width:160px;">${r["Materi Sesi"] || r["Mata Pelajaran"] || "—"}</td>
+        <td>${r["Nama Tutor"] || "—"}</td>
+        <td>${badgeStatus(r["Kehadiran Peserta"] || "Hadir")}</td>
+        <td>${r["Foto Bukti (Link)"] && r["Foto Bukti (Link)"].startsWith("http")
+          ? `<a href="${r["Foto Bukti (Link)"]}" target="_blank" style="color:var(--gold);font-size:11px;">📸 Lihat</a>`
+          : `<span style="color:rgba(255,255,255,.25);font-size:11px;">—</span>`}
+        </td>
+      </tr>`).join("")}</tbody>
+    </table>`;
   } catch(e) {
     el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${e.message}</div>`;
   }
@@ -1329,16 +1432,35 @@ async function loadJadwalTutor() {
     const res = await apiPost("getJadwalTutor");
     if (!res.ok) throw new Error(res.error);
     const rows = res.data;
-    if (!rows.length) { el.innerHTML = `<div class="empty-state"><div class="es-icon">📅</div>Belum ada jadwal mengajar.</div>`; return; }
-    el.innerHTML = `<table class="tbl"><thead><tr><th>Tanggal</th><th>Jam</th><th>Mapel</th><th>Peserta</th><th>Mode</th><th>Status</th></tr></thead>
-    <tbody>${rows.map(r=>`<tr>
-      <td>${r["Hari"]||""} ${formatTgl(r["Tanggal"])}</td>
-      <td>${r["Jam Mulai"]||""}–${r["Jam Selesai"]||""}</td>
-      <td>${r["Mata Pelajaran"]||"—"}</td>
-      <td>${r["Nama Peserta"]||"—"}</td>
-      <td>${r["Mode"]||"—"}</td>
-      <td>${badgeStatus(r["Status"])}</td>
-    </tr>`).join("")}</tbody></table>`;
+    if (!rows.length) {
+      el.innerHTML = `<div class="empty-state"><div class="es-icon">📅</div>Belum ada jadwal mengajar.</div>`;
+      return;
+    }
+    rows.sort((a, b) => (hariOrder[(a.hariBelajar||"").split(",")[0]?.trim()] || 9) - (hariOrder[(b.hariBelajar||"").split(",")[0]?.trim()] || 9));
+    el.innerHTML = rows.map(r => `
+      <div class="section-card" style="margin-bottom:12px;border-left:3px solid rgba(100,200,120,.6);">
+        <div class="sc-body" style="padding:14px 18px;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <div>
+              <div style="font-size:15px;font-weight:700;color:#fff;">${r.mapel || "—"}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:8px;">${r.idJadwal} · 👨‍🎓 ${r.namaPeserta || "—"}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                ${(r.hariBelajar || "").split(",").map(h => `<span style="background:rgba(100,200,120,.1);border:1px solid rgba(100,200,120,.25);border-radius:16px;padding:3px 10px;font-size:11px;font-weight:600;color:rgba(100,220,120,1);">📆 ${h.trim()}</span>`).join("")}
+                <span style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:3px 10px;font-size:11px;">⏰ ${r.jamMulai || "—"}–${r.jamSelesai || "—"}</span>
+                <span style="background:rgba(255,255,255,.04);border-radius:16px;padding:3px 10px;font-size:11px;">${r.mode === "Offline" ? "🏠" : "💻"} ${r.mode || "—"}</span>
+              </div>
+              ${r.lokasi ? `<div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:6px;">📍 ${r.lokasi}</div>` : ""}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+              ${badgeStatus(r.status || "Aktif")}
+              <button style="font-size:10px;padding:4px 10px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:6px;color:var(--gold);cursor:pointer;" 
+                onclick="document.getElementById('ab-id-jadwal').value='${r.idJadwal}';showPage('input-absensi');setTimeout(onJadwalAbsensiChange,100)">
+                📸 Isi Absensi
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`).join("");
   } catch(e) {
     el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${e.message}</div>`;
   }
@@ -1408,28 +1530,49 @@ async function submitNilai() {
 //  AKSI: INPUT ABSENSI (TUTOR)
 // ═══════════════════════════════════════════
 async function submitAbsensi() {
-  const body = {
-    idSesi:       document.getElementById("ab-id-sesi").value.trim(),
-    idJadwal:     document.getElementById("ab-id-jadwal").value.trim(),
-    namaPeserta:  document.getElementById("ab-nama-peserta").value.trim(),
-    hadirPeserta: document.getElementById("ab-hadir-peserta").value,
-    namaTutor:    document.getElementById("ab-nama-tutor").value.trim(),
-    hadirTutor:   document.getElementById("ab-hadir-tutor").value,
-    catatan:      document.getElementById("ab-catatan").value.trim(),
-  };
-  if (!body.idSesi || !body.idJadwal) {
-    showAlert("absensi-alert-err","ID Sesi dan ID Jadwal wajib diisi.","error"); return;
+  const idJadwal  = document.getElementById("ab-id-jadwal").value.trim();
+  const tanggal   = document.getElementById("ab-tanggal").value;
+  const fotoBukti = document.getElementById("ab-foto-bukti").value.trim();
+  const materi    = document.getElementById("ab-materi").value.trim();
+  const catatan   = document.getElementById("ab-catatan").value.trim();
+  const hadirPeserta = document.getElementById("ab-hadir-peserta").value;
+
+  hideAlert("absensi-alert-err");
+  if (!idJadwal) { showAlert("absensi-alert-err", "Pilih jadwal terlebih dahulu.", "error"); return; }
+  if (!tanggal)  { showAlert("absensi-alert-err", "Tanggal sesi wajib diisi.", "error"); return; }
+  if (!fotoBukti || !fotoBukti.startsWith("http")) {
+    showAlert("absensi-alert-err", "📸 Foto bukti kehadiran wajib diisi dengan link yang valid (https://...).", "error");
+    document.getElementById("ab-foto-bukti").focus();
+    return;
   }
+
+  const btn = document.getElementById("btn-submit-absensi");
+  btn.disabled = true; btn.textContent = "Menyimpan...";
   showLoading("Menyimpan absensi...");
   try {
-    const res = await apiPost("inputAbsensi", body);
+    const res = await apiPost("inputAbsensi", {
+      idJadwal, tanggal, fotoBukti, materiSesi: materi,
+      catatan, hadirPeserta, hadirTutor: "Hadir"
+    });
+    hideLoading();
     if (!res.ok) throw new Error(res.error);
-    showAlert("absensi-alert-ok", `Absensi tersimpan! ID: ${res.data.idAbsensi}`);
-    ["ab-id-sesi","ab-id-jadwal","ab-nama-peserta","ab-nama-tutor","ab-catatan"]
-      .forEach(id => { document.getElementById(id).value = ""; });
+
+    showAlert("absensi-alert-ok", "✅ Absensi berhasil disimpan! ID: " + (res.data?.idAbsensi || ""), "success");
+    // Reset form
+    document.getElementById("ab-id-jadwal").value = "";
+    document.getElementById("ab-tanggal").value = "";
+    document.getElementById("ab-foto-bukti").value = "";
+    document.getElementById("ab-materi").value = "";
+    document.getElementById("ab-catatan").value = "";
+    document.getElementById("ab-jadwal-info").style.display = "none";
+    // Refresh riwayat
+    loadRiwayatAbsensiTutor();
   } catch(e) {
-    showAlert("absensi-alert-err", e.message, "error");
-  } finally { hideLoading(); }
+    hideLoading();
+    showAlert("absensi-alert-err", "❌ " + e.message, "error");
+  } finally {
+    btn.disabled = false; btn.textContent = "📸 Simpan Absensi";
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -1448,12 +1591,81 @@ function renderInputNilaiForm() {
   }
 }
 function renderInputAbsensiForm() {
-  // Form sudah ada di HTML — tidak ada inisialisasi khusus diperlukan
+  // Isi dropdown jadwal dari state
+  const sel = document.getElementById("ab-id-jadwal");
+  if (!sel) return;
+  // Set tanggal hari ini sebagai default
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById("ab-tanggal").value = today;
+
+  // Populate dropdown dari jadwal tutor
+  const jadwal = state.dashboardData?.jadwalMengajar || [];
+  sel.innerHTML = '<option value="">— Pilih Jadwal —</option>';
+  jadwal.forEach(j => {
+    const opt = document.createElement("option");
+    opt.value = j.idJadwal || j["ID Jadwal"] || "";
+    opt.textContent = `${j.mapel || j["Mata Pelajaran"] || "?"} — ${j.namaPeserta || j["Nama Peserta"] || "?"} (${j.hariBelajar || j["Hari Belajar"] || "?"} ${j.jamMulai || j["Jam Mulai"] || ""})`;
+    opt.dataset.info = JSON.stringify(j);
+    sel.appendChild(opt);
+  });
+}
+
+function onJadwalAbsensiChange() {
+  const sel  = document.getElementById("ab-id-jadwal");
+  const info = document.getElementById("ab-jadwal-info");
+  const opt  = sel.options[sel.selectedIndex];
+  if (!opt || !opt.dataset.info) { info.style.display = "none"; return; }
+  try {
+    const j = JSON.parse(opt.dataset.info);
+    info.innerHTML = `
+      <div style="display:flex;flex-wrap:wrap;gap:8px 16px;">
+        <span>👨‍🎓 <strong>${j.namaPeserta || j["Nama Peserta"] || "—"}</strong></span>
+        <span>📚 ${j.mapel || j["Mata Pelajaran"] || "—"}</span>
+        <span>📆 ${j.hariBelajar || j["Hari Belajar"] || "—"}</span>
+        <span>⏰ ${j.jamMulai || j["Jam Mulai"] || "—"}–${j.jamSelesai || j["Jam Selesai"] || "—"}</span>
+        <span>${j.mode || j["Mode"] || "—"}</span>
+        ${j.lokasi || j["Lokasi/Link"] ? `<span>📍 ${j.lokasi || j["Lokasi/Link"]}</span>` : ""}
+      </div>`;
+    info.style.display = "";
+    // Auto-isi materi dari mapel
+    const materiEl = document.getElementById("ab-materi");
+    if (materiEl && !materiEl.value) materiEl.placeholder = `Topik hari ini (${j.mapel || j["Mata Pelajaran"] || "?"})...`;
+  } catch(e) { info.style.display = "none"; }
 }
 
 // ═══════════════════════════════════════════
 //  AUTO LOGIN jika ada session tersimpan
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  LOAD: RIWAYAT ABSENSI TUTOR
+// ═══════════════════════════════════════════
+async function loadRiwayatAbsensiTutor() {
+  const el = document.getElementById("riwayat-absensi-tutor");
+  if (!el) return;
+  el.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div>Memuat...</div>`;
+  try {
+    const res = await apiPost("getAbsensiTutor");
+    if (!res.ok) throw new Error(res.error);
+    const rows = res.data;
+    if (!rows.length) { el.innerHTML = `<div class="empty-state"><div class="es-icon">📋</div>Belum ada riwayat absensi.</div>`; return; }
+    el.innerHTML = `<table class="tbl">
+      <thead><tr><th>Tanggal</th><th>Peserta</th><th>Materi</th><th>Hadir</th><th>Foto Bukti</th><th>Diverifikasi</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td>${formatTgl(r["Tanggal"])}<div style="font-size:10px;color:rgba(255,255,255,.35);">${r["Hari"]||""}</div></td>
+        <td>${r["Nama Peserta"]||"—"}</td>
+        <td style="max-width:150px;font-size:11px;">${r["Materi Sesi"]||r["Mata Pelajaran"]||"—"}</td>
+        <td>${badgeStatus(r["Kehadiran Peserta"]||"Hadir")}</td>
+        <td>${r["Foto Bukti (Link)"] && r["Foto Bukti (Link)"].startsWith("http")
+          ? `<a href="${r["Foto Bukti (Link)"]}" target="_blank" style="color:var(--gold);font-size:11px;text-decoration:underline;">📸 Lihat</a>`
+          : `<span style="color:rgba(255,255,255,.25);font-size:11px;">—</span>`}</td>
+        <td style="font-size:11px;">${r["Diverifikasi"]||"—"}</td>
+      </tr>`).join("")}
+      </tbody></table>`;
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${e.message}</div>`;
+  }
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   const savedToken = sessionStorage.getItem("k_token");
   const savedRole  = sessionStorage.getItem("k_role");

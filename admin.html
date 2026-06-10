@@ -154,6 +154,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .btn-outline:hover{background:rgba(201,168,76,.08);}
 .btn-green{background:var(--green-bg);color:var(--green);border:1px solid rgba(26,107,74,.2);}
 .btn-green:hover{background:#d8ede4;}
+.btn-hari{padding:5px 12px;font-size:11px;font-weight:600;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);cursor:pointer;transition:.2s;}
+.btn-hari:hover{background:rgba(201,168,76,.12);border-color:rgba(201,168,76,.3);color:var(--gold);}
+.btn-hari.active{background:rgba(201,168,76,.18);border-color:var(--gold);color:var(--gold);font-weight:700;}
+.btn-sm-outline{font-size:11px;padding:4px 10px;background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:6px;color:rgba(255,255,255,.5);cursor:pointer;}
+.btn-sm-outline:hover{border-color:var(--gold);color:var(--gold);}
 .btn-red{background:var(--red-bg);color:var(--red);border:1px solid rgba(139,42,42,.2);}
 .btn-red:hover{background:#fae0e0;}
 .btn-sm{padding:5px 10px;font-size:11px;}
@@ -519,14 +524,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <input class="search-input" id="search-jadwal" placeholder="🔍 Cari peserta, tutor, mapel..." oninput="filterJadwal()">
           <select class="filter-select" id="filter-jadwal-status" onchange="filterJadwal()">
             <option value="">Semua Status</option>
-            <option>Terjadwal</option><option>Selesai</option><option>Batal</option>
+            <option>Aktif</option><option>Nonaktif</option>
           </select>
         </div>
         <div class="tbl-wrap">
           <table class="tbl">
             <thead><tr>
-              <th>ID</th><th>Peserta</th><th>Tanggal</th><th>Jam</th>
-              <th>Tutor</th><th>Mapel</th><th>Mode</th><th>Status</th>
+              <th>ID</th><th>Peserta</th><th>Mapel</th><th>Hari Belajar</th>
+              <th>Jam</th><th>Tutor</th><th>Mode</th><th>Status</th>
             </tr></thead>
             <tbody id="tbody-jadwal"><tr><td colspan="8" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
           </table>
@@ -758,12 +763,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   </div>
 </div>
 
-<!-- Modal: Tambah Jadwal -->
+<!-- Modal: Tambah Jadwal Rekap -->
 <div class="modal-backdrop" id="modal-jadwal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-jadwal')">✕</button>
     <div class="modal-title">Tambah Jadwal Belajar</div>
-    <div class="modal-desc">Notifikasi otomatis akan terkirim ke peserta dan tutor via WA.</div>
+    <div class="modal-desc">Jadwal rekap rutin — tanpa tanggal. Tutor mencatat sesi lewat absensi.</div>
     <div class="modal-alert" id="jadwal-alert"></div>
     <div class="form-grid">
       <div class="form-row">
@@ -772,7 +777,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       </div>
       <div class="form-row">
         <label class="form-label">Nama Peserta</label>
-        <input class="form-input" id="jf-nama-peserta" placeholder="">
+        <input class="form-input" id="jf-nama-peserta" placeholder="Otomatis / isi manual">
       </div>
     </div>
     <div class="form-grid">
@@ -782,20 +787,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       </div>
       <div class="form-row">
         <label class="form-label">Nama Tutor</label>
-        <input class="form-input" id="jf-nama-tutor" placeholder="">
+        <input class="form-input" id="jf-nama-tutor" placeholder="Otomatis / isi manual">
       </div>
     </div>
-    <div class="form-grid">
-      <div class="form-row">
-        <label class="form-label">Tanggal *</label>
-        <input class="form-input" id="jf-tanggal" type="date">
-      </div>
-      <div class="form-row">
-        <label class="form-label">Hari</label>
-        <select class="form-select" id="jf-hari">
-          <option>Senin</option><option>Selasa</option><option>Rabu</option>
-          <option>Kamis</option><option>Jumat</option><option>Sabtu</option><option>Minggu</option>
-        </select>
+    <div class="form-row">
+      <label class="form-label">Mata Pelajaran *</label>
+      <input class="form-input" id="jf-mapel" placeholder="Matematika, Fisika, Bahasa Inggris...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Hari Belajar * <span style="font-weight:400;color:rgba(255,255,255,.4);">(bisa lebih dari satu, pisah koma)</span></label>
+      <input class="form-input" id="jf-hari-belajar" placeholder="Senin, Rabu  atau  Sabtu">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+        <button type="button" class="btn-hari" onclick="toggleHari('Senin')">Senin</button>
+        <button type="button" class="btn-hari" onclick="toggleHari('Selasa')">Selasa</button>
+        <button type="button" class="btn-hari" onclick="toggleHari('Rabu')">Rabu</button>
+        <button type="button" class="btn-hari" onclick="toggleHari('Kamis')">Kamis</button>
+        <button type="button" class="btn-hari" onclick="toggleHari('Jumat')">Jumat</button>
+        <button type="button" class="btn-hari" onclick="toggleHari('Sabtu')">Sabtu</button>
+        <button type="button" class="btn-hari" onclick="toggleHari('Minggu')">Minggu</button>
       </div>
     </div>
     <div class="form-grid">
@@ -810,23 +819,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     </div>
     <div class="form-grid">
       <div class="form-row">
-        <label class="form-label">Mata Pelajaran</label>
-        <input class="form-input" id="jf-mapel" placeholder="Matematika">
-      </div>
-      <div class="form-row">
         <label class="form-label">Mode</label>
         <select class="form-select" id="jf-mode">
-          <option>Online</option><option>Offline</option>
+          <option value="Online">💻 Online</option>
+          <option value="Offline">🏠 Offline</option>
+          <option value="Keduanya">🔀 Keduanya</option>
         </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Lokasi / Link</label>
+        <input class="form-input" id="jf-lokasi" placeholder="Google Meet / Alamat rumah">
       </div>
     </div>
     <div class="form-row">
-      <label class="form-label">Lokasi / Link</label>
-      <input class="form-input" id="jf-lokasi" placeholder="Google Meet / Alamat rumah">
+      <label class="form-label">Keterangan</label>
+      <input class="form-input" id="jf-keterangan" placeholder="Opsional">
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-jadwal')">Batal</button>
-      <button class="btn btn-gold" onclick="doTambahJadwal()">📅 Tambah Jadwal</button>
+      <button class="btn btn-gold" onclick="doTambahJadwal()">📅 Buat Jadwal</button>
     </div>
   </div>
 </div>
@@ -1432,61 +1443,97 @@ function renderJadwal(rows) {
   const q  = document.getElementById("search-jadwal").value.toLowerCase();
   const st = document.getElementById("filter-jadwal-status").value;
   const filtered = rows.filter(r => {
-    const match = !q || (r["Nama Peserta"]||"").toLowerCase().includes(q) ||
-      (r["Nama Tutor"]||"").toLowerCase().includes(q) ||
-      (r["Mata Pelajaran"]||"").toLowerCase().includes(q);
-    return match && (!st || r["Status"] === st);
+    const match = !q ||
+      (r.namaPeserta||r["Nama Peserta"]||"").toLowerCase().includes(q) ||
+      (r.namaTutor||r["Nama Tutor"]||"").toLowerCase().includes(q) ||
+      (r.mapel||r["Mata Pelajaran"]||"").toLowerCase().includes(q) ||
+      (r.hariBelajar||r["Hari Belajar"]||"").toLowerCase().includes(q);
+    const status = r.status || r["Status"] || "";
+    return match && (!st || status === st);
   });
   const tbody = document.getElementById("tbody-jadwal");
   if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Tidak ada data.</td></tr>`; return; }
-  tbody.innerHTML = filtered.map(r => `
+  tbody.innerHTML = filtered.map(r => {
+    const hari = r.hariBelajar || r["Hari Belajar"] || "—";
+    const jMulai = r.jamMulai || r["Jam Mulai"] || "—";
+    const jSelesai = r.jamSelesai || r["Jam Selesai"] || "";
+    const status = r.status || r["Status"] || "Aktif";
+    return `
     <tr>
-      <td><span style="font-size:11px;color:var(--gold);font-weight:600;">${r["ID Jadwal"]||"—"}</span></td>
-      <td>${r["Nama Peserta"]||"—"}<div style="font-size:10px;color:rgba(255,255,255,.35);">${r["ID Peserta"]||""}</div></td>
-      <td>${r["Hari"]||""} ${formatTgl(r["Tanggal"])}</td>
-      <td>${r["Jam Mulai"]||"—"}–${r["Jam Selesai"]||"—"}</td>
-      <td>${r["Nama Tutor"]||"—"}</td>
-      <td>${r["Mata Pelajaran"]||"—"}</td>
-      <td>${r["Mode"]||"—"}</td>
-      <td>${badgeStatus(r["Status"])}</td>
-    </tr>`).join("");
+      <td><span style="font-size:11px;color:var(--gold);font-weight:600;">${r.idJadwal||r["ID Jadwal"]||"—"}</span></td>
+      <td>${r.namaPeserta||r["Nama Peserta"]||"—"}<div style="font-size:10px;color:rgba(255,255,255,.35);">${r.idPeserta||r["ID Peserta"]||""}</div></td>
+      <td>${r.mapel||r["Mata Pelajaran"]||"—"}</td>
+      <td>
+        ${hari.split(",").map(h => `<span style="display:inline-block;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:12px;padding:2px 8px;font-size:10px;font-weight:600;color:var(--gold);margin:1px;">${h.trim()}</span>`).join("")}
+      </td>
+      <td style="font-size:12px;">${jMulai}${jSelesai ? "–"+jSelesai : ""}</td>
+      <td>${r.namaTutor||r["Nama Tutor"]||"—"}</td>
+      <td>${r.mode||r["Mode"]||"—"}</td>
+      <td>${badgeStatus(status)}</td>
+    </tr>`;
+  }).join("");
 }
 
 function filterJadwal() { renderJadwal(cache.jadwal); }
 
 function openTambahJadwalModal() {
-  ["jf-id-peserta","jf-nama-peserta","jf-id-tutor","jf-nama-tutor","jf-tanggal","jf-jam-mulai","jf-jam-selesai","jf-mapel","jf-lokasi"].forEach(id => document.getElementById(id).value = "");
+  ["jf-id-peserta","jf-nama-peserta","jf-id-tutor","jf-nama-tutor",
+   "jf-mapel","jf-jam-mulai","jf-jam-selesai","jf-lokasi","jf-keterangan"]
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
+  document.getElementById("jf-hari-belajar").value = "";
+  document.getElementById("jf-mode").value = "Online";
+  // Reset hari toggle buttons
+  document.querySelectorAll(".btn-hari").forEach(b => b.classList.remove("active"));
   hideAlert("jadwal-alert");
   openModal("modal-jadwal");
 }
 
 async function doTambahJadwal() {
-  const idPeserta = document.getElementById("jf-id-peserta").value.trim();
-  const idTutor   = document.getElementById("jf-id-tutor").value.trim();
-  const tanggal   = document.getElementById("jf-tanggal").value;
-  if (!idPeserta || !idTutor || !tanggal) { showAlert("jadwal-alert","ID Peserta, ID Tutor, dan Tanggal wajib diisi.","error"); return; }
+  const idPeserta   = document.getElementById("jf-id-peserta").value.trim();
+  const idTutor     = document.getElementById("jf-id-tutor").value.trim();
+  const hariBelajar = document.getElementById("jf-hari-belajar").value.trim();
+  if (!idPeserta || !idTutor || !hariBelajar) {
+    showAlert("jadwal-alert", "ID Peserta, ID Tutor, dan Hari Belajar wajib diisi.", "error"); return;
+  }
   showLoading("Menyimpan jadwal...");
   try {
     const res = await apiPost("tambahJadwal", {
       idPeserta,
-      namaPeserta: document.getElementById("jf-nama-peserta").value.trim(),
+      namaPeserta:  document.getElementById("jf-nama-peserta").value.trim(),
       idTutor,
-      namaTutor:   document.getElementById("jf-nama-tutor").value.trim(),
-      tanggal,
-      hari:        document.getElementById("jf-hari").value,
-      jamMulai:    document.getElementById("jf-jam-mulai").value,
-      jamSelesai:  document.getElementById("jf-jam-selesai").value,
-      mapel:       document.getElementById("jf-mapel").value.trim(),
-      mode:        document.getElementById("jf-mode").value,
-      lokasi:      document.getElementById("jf-lokasi").value.trim()
+      namaTutor:    document.getElementById("jf-nama-tutor").value.trim(),
+      mapel:        document.getElementById("jf-mapel").value.trim(),
+      hariBelajar,
+      jamMulai:     document.getElementById("jf-jam-mulai").value,
+      jamSelesai:   document.getElementById("jf-jam-selesai").value,
+      mode:         document.getElementById("jf-mode").value,
+      lokasi:       document.getElementById("jf-lokasi").value.trim(),
+      keterangan:   document.getElementById("jf-keterangan")?.value.trim() || ""
     });
     hideLoading();
     if (!res.ok) { showAlert("jadwal-alert", res.error, "error"); return; }
     closeModal("modal-jadwal");
-    toast("✅ Jadwal ditambahkan! WA terkirim ke peserta & tutor.", "success");
+    toast("✅ Jadwal rekap dibuat! WA terkirim ke peserta & tutor.", "success");
     cache.jadwal = [];
     if (currentPage === "jadwal") loadJadwal();
   } catch(e) { hideLoading(); showAlert("jadwal-alert", e.message, "error"); }
+}
+
+// Toggle pilih hari belajar
+function toggleHari(hari) {
+  const input = document.getElementById("jf-hari-belajar");
+  const hariList = input.value ? input.value.split(",").map(h => h.trim()).filter(Boolean) : [];
+  const idx = hariList.indexOf(hari);
+  if (idx >= 0) hariList.splice(idx, 1);
+  else hariList.push(hari);
+  // Sort hari
+  const urutan = ["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"];
+  hariList.sort((a, b) => urutan.indexOf(a) - urutan.indexOf(b));
+  input.value = hariList.join(", ");
+  // Update tombol aktif
+  document.querySelectorAll(".btn-hari").forEach(b => {
+    b.classList.toggle("active", hariList.includes(b.textContent.trim()));
+  });
 }
 
 // ── LAPORAN ──
