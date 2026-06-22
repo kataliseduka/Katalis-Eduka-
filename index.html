@@ -160,26 +160,37 @@ body {
 
 /* ═══ TARIF ═══ */
 .layanan-section { background: var(--navy-3); }
-.tarif-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-.tarif-card { background: rgba(255,255,255,.04); border: 1px solid rgba(201,168,76,.15); border-radius: var(--radius); overflow: hidden; transition: all .3s; }
-.tarif-card:hover { border-color: rgba(201,168,76,.4); background: rgba(255,255,255,.07); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.3); }
-.tc-head { padding: 18px 20px 14px; border-bottom: 1px solid rgba(255,255,255,.06); }
-.tc-badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; background: rgba(201,168,76,.15); color: var(--gold); border: 1px solid rgba(201,168,76,.25); margin-bottom: 10px; }
-.tc-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
-.tc-sub { font-size: 11px; color: rgba(255,255,255,.35); }
-.tc-body { padding: 14px 20px; }
-.tc-price-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 12px; }
-.tc-price-row:last-of-type { border-bottom: none; }
-.tc-mode { color: rgba(255,255,255,.45); display: flex; align-items: center; gap: 6px; }
-.mode-pill { font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 8px; }
-.mode-pill.online { background: rgba(26,75,139,.3); color: #7eb4ff; border: 1px solid rgba(26,75,139,.4); }
-.mode-pill.offline { background: rgba(26,107,74,.3); color: #7addb0; border: 1px solid rgba(26,107,74,.4); }
-.tc-price-val { font-size: 13px; font-weight: 700; color: var(--gold-2); }
-.tc-price-val small { font-size: 9px; font-weight: 400; color: rgba(255,255,255,.3); }
-.tc-komisi { margin-top: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(201,168,76,.07); border: 1px solid rgba(201,168,76,.15); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: rgba(255,255,255,.4); }
-.tc-komisi strong { color: var(--gold); }
+.tarif-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.tarif-tab { background: rgba(255,255,255,.04); border: 1px solid rgba(201,168,76,.18); color: rgba(255,255,255,.55); font-size: 12px; font-weight: 600; padding: 9px 18px; border-radius: 30px; cursor: pointer; transition: all .2s; }
+.tarif-tab:hover { border-color: rgba(201,168,76,.4); color: var(--white); }
+.tarif-tab.active { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+.tarif-table-wrap { background: rgba(255,255,255,.04); border: 1px solid rgba(201,168,76,.15); border-radius: var(--radius); overflow: hidden; }
+.tarif-row { display: grid; grid-template-columns: 1fr auto auto; gap: 16px; align-items: center; padding: 14px 22px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.tarif-row:last-child { border-bottom: none; }
+.tarif-row.bundle { background: rgba(201,168,76,.07); }
+.tr-layanan { font-size: 13px; font-weight: 600; color: var(--white); }
+.tr-layanan small { display: block; font-size: 10.5px; font-weight: 400; color: rgba(255,255,255,.35); margin-top: 2px; }
+.tr-bundle-badge { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: 10px; background: var(--gold); color: var(--navy); margin-left: 8px; vertical-align: middle; }
+.tr-price { text-align: right; min-width: 96px; }
+.tr-price .mode-pill { display: block; font-size: 9px; font-weight: 600; margin-bottom: 3px; }
+.tr-price .mode-pill.online { color: #7eb4ff; }
+.tr-price .mode-pill.offline { color: #7addb0; }
+.tr-price .pv { font-size: 13px; font-weight: 700; color: var(--gold-2); }
 .sesi-note { margin-top: 24px; padding: 16px 20px; background: rgba(201,168,76,.06); border: 1px solid rgba(201,168,76,.2); border-radius: 12px; font-size: 13px; color: rgba(255,255,255,.55); display: flex; align-items: center; gap: 12px; }
 .sesi-note strong { color: var(--gold); }
+.paket-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.paket-card { background: rgba(255,255,255,.04); border: 1px solid rgba(201,168,76,.15); border-radius: var(--radius); overflow: hidden; transition: all .3s; display: flex; flex-direction: column; }
+.paket-card:hover { border-color: rgba(201,168,76,.4); background: rgba(255,255,255,.07); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+.pk-head { padding: 18px 20px 14px; border-bottom: 1px solid rgba(255,255,255,.06); position: relative; }
+.pk-badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; background: rgba(201,168,76,.15); color: var(--gold); border: 1px solid rgba(201,168,76,.25); margin-bottom: 10px; }
+.pk-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+.pk-diskon { position: absolute; top: 16px; right: 16px; font-size: 10px; font-weight: 700; color: var(--navy); background: var(--gold); padding: 3px 9px; border-radius: 20px; }
+.pk-body { padding: 14px 20px; flex: 1; display: flex; flex-direction: column; }
+.pk-desc { font-size: 12px; color: rgba(255,255,255,.45); line-height: 1.6; margin-bottom: 12px; }
+.pk-meta-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 12px; color: rgba(255,255,255,.45); }
+.pk-meta-row:last-of-type { border-bottom: none; }
+.pk-meta-row strong { color: var(--gold-2); font-weight: 700; }
+.pk-note { margin-top: 12px; font-size: 10.5px; color: rgba(255,255,255,.3); line-height: 1.5; }
 
 /* ═══ CARA DAFTAR ═══ */
 .daftar-section { background: var(--navy-2); }
@@ -347,7 +358,8 @@ footer { background: #060e1a; border-top: 1px solid rgba(201,168,76,.1); padding
 }
 @media(max-width: 580px) {
   .footer-top { grid-template-columns: 1fr; gap: 28px; }
-  .tarif-grid { grid-template-columns: 1fr; }
+  .tarif-row { grid-template-columns: 1fr; gap: 8px; }
+  .tr-price { text-align: left; }
 }
 </style>
 </head>
@@ -511,47 +523,28 @@ footer { background: #060e1a; border-top: 1px solid rgba(201,168,76,.1); padding
     <div class="sec-header-row fade-up">
       <div>
         <div class="sec-kicker">Layanan &amp; Tarif</div>
-        <h2 class="sec-title">Tarif <em>Transparan</em>,<br>Tutor Berkualitas</h2>
-        <p class="sec-desc">Semua tarif per sesi (90 menit). Ditentukan oleh jenjang pendidikan tutor untuk menjamin kualitas yang sepadan.</p>
+        <h2 class="sec-title">Tarif <em>Transparan</em>,<br>Per Jenjang &amp; Mata Pelajaran</h2>
+        <p class="sec-desc">Semua tarif per sesi (90 menit). Ditentukan oleh jenjang siswa dan mata pelajaran/layanan yang dipilih — bukan oleh jenjang tutor.</p>
       </div>
     </div>
-    <div class="tarif-grid">
-      <div class="tarif-card fade-up">
-        <div class="tc-head"><div class="tc-badge">Non-Sarjana</div><div class="tc-title">Tutor Bersertifikat</div><div class="tc-sub">Pengajar bersertifikat resmi tanpa gelar sarjana</div></div>
-        <div class="tc-body">
-          <div class="tc-price-row"><span class="tc-mode"><span class="mode-pill online">Online</span></span><span class="tc-price-val">Rp 25.000–30.000 <small>/sesi</small></span></div>
-          <div class="tc-price-row"><span class="tc-mode"><span class="mode-pill offline">Offline</span></span><span class="tc-price-val">Rp 35.000–40.000 <small>/sesi</small></span></div>
-          <div class="tc-komisi"><span>Komisi lembaga</span><strong>20%</strong></div>
-        </div>
-      </div>
-      <div class="tarif-card fade-up" style="transition-delay:.1s">
-        <div class="tc-head"><div class="tc-badge">S1</div><div class="tc-title">Tutor Sarjana S1</div><div class="tc-sub">Lulusan S1 dari berbagai bidang keilmuan</div></div>
-        <div class="tc-body">
-          <div class="tc-price-row"><span class="tc-mode"><span class="mode-pill online">Online</span></span><span class="tc-price-val">Rp 30.000–45.000 <small>/sesi</small></span></div>
-          <div class="tc-price-row"><span class="tc-mode"><span class="mode-pill offline">Offline</span></span><span class="tc-price-val">Rp 45.000–70.000 <small>/sesi</small></span></div>
-          <div class="tc-komisi"><span>Komisi lembaga</span><strong>20–30%</strong></div>
-        </div>
-      </div>
-      <div class="tarif-card fade-up" style="transition-delay:.2s">
-        <div class="tc-head"><div class="tc-badge">S2</div><div class="tc-title">Tutor Magister S2</div><div class="tc-sub">Bimbel lanjutan, Olimpiade &amp; Konsultasi Akademik</div></div>
-        <div class="tc-body">
-          <div class="tc-price-row"><span class="tc-mode"><span class="mode-pill online">Online</span></span><span class="tc-price-val">Rp 30.000–45.000 <small>/sesi</small></span></div>
-          <div class="tc-price-row"><span class="tc-mode"><span class="mode-pill offline">Offline</span></span><span class="tc-price-val">Rp 55.000–100.000 <small>/sesi</small></span></div>
-          <div class="tc-komisi"><span>Komisi lembaga</span><strong>25–35%</strong></div>
-        </div>
-      </div>
-      <div class="tarif-card fade-up" style="transition-delay:.3s">
-        <div class="tc-head"><div class="tc-badge">S3</div><div class="tc-title">Tutor Doktor S3</div><div class="tc-sub">Riset, Skripsi, Tesis, Disertasi &amp; Metodologi</div></div>
-        <div class="tc-body">
-          <div class="tc-price-row"><span class="tc-mode"><span class="mode-pill online">Online</span></span><span class="tc-price-val">Rp 30.000–45.000 <small>/sesi</small></span></div>
-          <div class="tc-price-row"><span class="tc-mode"><span class="mode-pill offline">Offline</span></span><span class="tc-price-val">Rp 60.000–120.000 <small>/sesi</small></span></div>
-          <div class="tc-komisi"><span>Komisi lembaga</span><strong>30–40%</strong></div>
-        </div>
-      </div>
+    <div class="tarif-tabs" id="tarif-tabs">
+      <p style="color:rgba(255,255,255,.3);font-size:12px;padding:8px 0">Memuat tabel tarif…</p>
     </div>
+    <div class="tarif-table-wrap" id="tarif-table-wrap"></div>
     <div class="sesi-note fade-up">
       <span style="font-size:20px">⏱</span>
-      <span><strong>1 sesi = 90 menit.</strong> Komisi lembaga berjenjang — tutor tarif rendah mendapat potongan lebih kecil agar semua anggota Katalis Eduka tetap sejahtera.</span>
+      <span><strong>1 sesi = 90 menit.</strong> Pilih "Semua Mata Pelajaran" untuk paket bundling per jenjang — lebih hemat dibanding bayar per mapel.</span>
+    </div>
+
+    <div class="sec-header-row fade-up" style="margin-top:56px">
+      <div>
+        <div class="sec-kicker">Paket Belajar</div>
+        <h2 class="sec-title">Pilih <em>Paket</em> Sesuai Kebutuhan</h2>
+        <p class="sec-desc">Hemat lebih banyak dengan paket bulanan, atau bayar per sesi sesuai kehadiran. Semua paket bisa disesuaikan saat pendaftaran.</p>
+      </div>
+    </div>
+    <div class="paket-grid" id="paket-grid">
+      <p style="color:rgba(255,255,255,.3);font-size:12px;grid-column:1/-1;text-align:center;padding:24px 0">Memuat daftar paket…</p>
     </div>
   </div>
 </section>
@@ -941,6 +934,93 @@ function bintangStr(n) {
 }
 
 // ═══════════════════════════════════════════════════════
+//  RENDER TARIF (per jenjang siswa + mata pelajaran/layanan — dari sheet Tarif)
+// ═══════════════════════════════════════════════════════
+function fmtRupiah(n) {
+  return "Rp " + Number(n || 0).toLocaleString("id-ID");
+}
+
+let tarifDataCache = [];
+
+function renderTarifRows(jenjang) {
+  const wrap  = document.getElementById("tarif-table-wrap");
+  const group = tarifDataCache.find(g => g.jenjang === jenjang);
+  const rows  = group ? group.layanan : [];
+  if (!wrap) return;
+  if (rows.length === 0) {
+    wrap.innerHTML = `<p style="color:rgba(255,255,255,.3);font-size:12px;text-align:center;padding:24px 0">Belum ada tarif untuk jenjang ini.</p>`;
+    return;
+  }
+  wrap.innerHTML = rows.map(r => {
+    const isBundle = (r.layanan || "").toLowerCase().includes("semua mata pelajaran") || (r.layanan || "").toLowerCase().includes("semua mapel");
+    const badge    = isBundle ? `<span class="tr-bundle-badge">Paket Hemat</span>` : "";
+    return `
+      <div class="tarif-row ${isBundle ? "bundle" : ""}">
+        <div class="tr-layanan">${r.layanan}${badge}${r.keterangan ? `<small>${r.keterangan}</small>` : ""}</div>
+        <div class="tr-price"><span class="mode-pill online">Online</span><span class="pv">${fmtRupiah(r.online)}</span></div>
+        <div class="tr-price"><span class="mode-pill offline">Offline</span><span class="pv">${fmtRupiah(r.offline)}</span></div>
+      </div>`;
+  }).join("");
+}
+
+function switchTarifTab(jenjang, btn) {
+  document.querySelectorAll(".tarif-tab").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  renderTarifRows(jenjang);
+}
+
+function renderTarif(list) {
+  const tabsEl = document.getElementById("tarif-tabs");
+  if (!tabsEl) return;
+  tarifDataCache = list || [];
+  if (tarifDataCache.length === 0) {
+    tabsEl.innerHTML = "";
+    document.getElementById("tarif-table-wrap").innerHTML =
+      `<p style="color:rgba(255,255,255,.3);font-size:12px;text-align:center;padding:24px 0">Tabel tarif belum tersedia.</p>`;
+    return;
+  }
+  tabsEl.innerHTML = tarifDataCache.map((g, i) =>
+    `<button class="tarif-tab ${i === 0 ? "active" : ""}" onclick="switchTarifTab('${g.jenjang}', this)">${g.jenjang}</button>`
+  ).join("");
+  renderTarifRows(tarifDataCache[0].jenjang);
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER PAKET (sheet Paket)
+// ═══════════════════════════════════════════════════════
+function renderPaket(list) {
+  const grid = document.getElementById("paket-grid");
+  if (!grid) return;
+  if (!list || list.length === 0) {
+    grid.innerHTML = `<p style="color:rgba(255,255,255,.3);font-size:12px;grid-column:1/-1;text-align:center;padding:24px 0">Belum ada paket yang ditampilkan.</p>`;
+    return;
+  }
+  grid.innerHTML = list.map((p, i) => {
+    const delay      = i > 0 ? `style="transition-delay:${i * 0.1}s"` : "";
+    const diskonPill = Number(p.diskon) > 0 ? `<div class="pk-diskon">Hemat ${p.diskon}%</div>` : "";
+    const hargaTxt   = String(p.harga || "").toLowerCase().includes("gratis") || Number(p.harga) === 0
+      ? "Gratis"
+      : (isNaN(Number(p.harga)) ? p.harga : fmtRupiah(p.harga));
+    return `
+      <div class="paket-card fade-up" ${delay}>
+        <div class="pk-head">
+          ${diskonPill}
+          <div class="pk-badge">${p.kategori || "Paket"}</div>
+          <div class="pk-title">${p.nama}</div>
+        </div>
+        <div class="pk-body">
+          <div class="pk-desc">${p.deskripsi || ""}</div>
+          <div class="pk-meta-row"><span>Sesi/Bulan</span><strong>${p.jumlahSesi || "—"}</strong></div>
+          <div class="pk-meta-row"><span>Durasi</span><strong>${p.durasi ? p.durasi + " mnt" : "—"}</strong></div>
+          <div class="pk-meta-row"><span>Harga</span><strong>${hargaTxt}</strong></div>
+          ${p.keterangan ? `<div class="pk-note">${p.keterangan}</div>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+  grid.querySelectorAll(".fade-up").forEach(el => observer.observe(el));
+}
+
+// ═══════════════════════════════════════════════════════
 //  RENDER TESTIMONI
 // ═══════════════════════════════════════════════════════
 function renderTestimoni(list) {
@@ -1045,6 +1125,16 @@ function renderAgenda(list) {
 //  LOAD SEMUA DATA DARI API
 // ═══════════════════════════════════════════════════════
 async function loadPublicData() {
+  // Tarif per jenjang
+  let tarif = cacheGet("k_tarif");
+  if (!tarif) { tarif = await apiGet("getPublicTarif"); if (tarif) cacheSet("k_tarif", tarif); }
+  renderTarif(tarif);
+
+  // Paket
+  let paket = cacheGet("k_paket");
+  if (!paket) { paket = await apiGet("getPublicPaket"); if (paket) cacheSet("k_paket", paket); }
+  renderPaket(paket);
+
   // Testimoni
   let testi = cacheGet("k_testimoni");
   if (!testi) { testi = await apiGet("getPublicTestimoni"); if (testi) cacheSet("k_testimoni", testi); }
