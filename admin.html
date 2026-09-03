@@ -354,6 +354,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
         <span class="sb-icon">📄</span> Laporan Keuangan
       </button>
 
+      <div class="sb-section">Konten</div>
+      <button class="sb-item" onclick="showPage('modul')" data-page="modul">
+        <span class="sb-icon">📚</span> Modul Belajar
+      </button>
+
       <div class="sb-section">Komunikasi</div>
       <button class="sb-item" onclick="showPage('broadcast')" data-page="broadcast">
         <span class="sb-icon">📢</span> Broadcast WA
@@ -595,6 +600,38 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <table class="tbl">
             <thead><tr><th>ID Tagihan</th><th>Peserta</th><th>Paket</th><th>Jumlah</th><th>Tgl Bayar</th><th>Bank</th><th>Ref</th></tr></thead>
             <tbody id="tbody-laporan"><tr><td colspan="7" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Pilih bulan lalu klik Tampilkan</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PAGE: MODUL ═══ -->
+    <div class="page" id="page-modul">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="page-title">Modul Belajar</div>
+          <div class="page-desc">Kelola modul PDF. Peserta hanya melihat modul sesuai jenjang &amp; mapel yang diikuti, tutor bisa melihat semua modul. Modul hanya tampil (view-only), tidak bisa diunduh.</div>
+        </div>
+        <button class="btn btn-gold" onclick="openModulModal()">+ Upload Modul</button>
+      </div>
+      <div class="section-card">
+        <div class="tbl-controls">
+          <input class="search-input" id="search-modul" placeholder="🔍 Cari judul / mapel..." oninput="filterModul()">
+          <select class="filter-select" id="filter-modul-jenjang" onchange="filterModul()">
+            <option value="">Semua Jenjang</option>
+            <option>SD</option><option>SMP</option><option>SMA</option><option>Mahasiswa</option><option>Umum</option>
+          </select>
+          <select class="filter-select" id="filter-modul-status" onchange="filterModul()">
+            <option value="">Semua Status</option>
+            <option>Aktif</option><option>Nonaktif</option>
+          </select>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>Judul</th><th>Jenjang</th><th>Mapel</th><th>Ukuran</th><th>Dilihat</th><th>Status</th><th>Aksi</th>
+            </tr></thead>
+            <tbody id="tbody-modul"><tr><td colspan="7" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -842,6 +879,73 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   </div>
 </div>
 
+<!-- Modal: Upload / Edit Modul -->
+<div class="modal-backdrop" id="modal-modul">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-modul')">✕</button>
+    <div class="modal-title" id="mf-title">Upload Modul</div>
+    <div class="modal-desc">File PDF akan disimpan privat di Google Drive dan hanya bisa ditampilkan (view-only) di dashboard peserta/tutor, tidak bisa diunduh.</div>
+    <div class="modal-alert" id="modul-alert"></div>
+    <input type="hidden" id="mf-id-modul">
+    <div class="form-row">
+      <label class="form-label">Judul Modul *</label>
+      <input class="form-input" id="mf-judul" placeholder="Contoh: Modul Pecahan Kelas 5">
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">Jenjang Siswa *</label>
+        <select class="form-select" id="mf-jenjang">
+          <option value="SD">SD</option>
+          <option value="SMP">SMP</option>
+          <option value="SMA">SMA</option>
+          <option value="Mahasiswa">Mahasiswa</option>
+          <option value="Umum">Umum</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Mata Pelajaran *</label>
+        <input class="form-input" id="mf-mapel" placeholder="Matematika, IPA, dll">
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Deskripsi</label>
+      <input class="form-input" id="mf-deskripsi" placeholder="Opsional — ringkasan isi modul">
+    </div>
+    <div class="form-row" id="mf-file-row">
+      <label class="form-label">File PDF * <span style="font-weight:400;color:rgba(255,255,255,.4);">(maks ±15MB)</span></label>
+      <input class="form-input" id="mf-file" type="file" accept="application/pdf">
+      <div id="mf-file-info" style="font-size:11px;color:rgba(255,255,255,.4);margin-top:6px;"></div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Status</label>
+      <select class="form-select" id="mf-status">
+        <option value="Aktif">Aktif (tampil)</option>
+        <option value="Nonaktif">Nonaktif (disembunyikan)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-modul')">Batal</button>
+      <button class="btn btn-gold" id="mf-submit-btn" onclick="doSimpanModul()">📚 Simpan Modul</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Preview Modul (view-only) -->
+<div class="modal-backdrop" id="modal-modul-view">
+  <div class="modal" style="max-width:820px;">
+    <button class="modal-close" onclick="closeModal('modal-modul-view')">✕</button>
+    <div class="modal-title" id="mv-title">Pratinjau Modul</div>
+    <div class="modal-desc">Mode tampilan saja — tidak untuk diunduh.</div>
+    <div id="mv-body" style="max-height:70vh;overflow-y:auto;background:rgba(0,0,0,.25);border-radius:10px;padding:10px;text-align:center;" oncontextmenu="return false;"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+if (window['pdfjsLib']) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+</script>
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbz-lM8m9k7B88sjcCbdVfQWtkAJXZC1WAg4fgqiBleU6c7S8FVkxqnItt76vTRaNOzs/exec";
 
@@ -986,6 +1090,7 @@ function showPage(page) {
   else if (page === "jadwal") loadJadwal();
   else if (page === "laporan") loadLaporan();
   else if (page === "notiflog") loadNotifLog();
+  else if (page === "modul") loadModul();
 }
 
 function refreshCurrentPage() { showPage(currentPage); }
@@ -1657,6 +1762,200 @@ function hideAlert(id) {
 document.querySelectorAll(".modal-backdrop").forEach(bd => {
   bd.addEventListener("click", e => { if (e.target === bd) bd.classList.remove("show"); });
 });
+
+// ═══════════════════════════════════════════
+//  MODUL BELAJAR (Admin)
+// ═══════════════════════════════════════════
+cache.modul = [];
+
+async function loadModul() {
+  const tbody = document.getElementById("tbody-modul");
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr>`;
+  try {
+    const res = await apiPost("getAllModul");
+    if (!res.ok) { toast("Gagal memuat modul: " + res.error, "error"); return; }
+    cache.modul = res.data || [];
+    filterModul();
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+function filterModul() {
+  const q       = (document.getElementById("search-modul").value || "").toLowerCase();
+  const jenjang = document.getElementById("filter-modul-jenjang").value;
+  const status  = document.getElementById("filter-modul-status").value;
+  const rows = cache.modul.filter(r => {
+    if (jenjang && r["Jenjang"] !== jenjang) return false;
+    if (status && r["Status"] !== status) return false;
+    if (q && !((r["Judul"]||"").toLowerCase().includes(q) || (r["Mata Pelajaran"]||"").toLowerCase().includes(q))) return false;
+    return true;
+  });
+  renderModulTable(rows);
+}
+
+function renderModulTable(rows) {
+  const tbody = document.getElementById("tbody-modul");
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Belum ada modul.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const statusBadge = r["Status"] === "Aktif"
+      ? `<span class="badge badge-green">Aktif</span>`
+      : `<span class="badge badge-gray">Nonaktif</span>`;
+    const ukuran = r["Ukuran (KB)"] ? Math.round(r["Ukuran (KB)"]/1024*10)/10 + " MB" : "—";
+    return `<tr>
+      <td>${r["Judul"]||"—"}</td>
+      <td>${r["Jenjang"]||"—"}</td>
+      <td>${r["Mata Pelajaran"]||"—"}</td>
+      <td>${ukuran}</td>
+      <td>${r["Jumlah Dilihat"]||0}</td>
+      <td>${statusBadge}</td>
+      <td>
+        <button class="btn-sm-outline" onclick="previewModulAdmin('${r["ID Modul"]}','${(r["Judul"]||"").replace(/'/g,"\\'")}')">👁️ Lihat</button>
+        <button class="btn-sm-outline" onclick='openModulModal(${JSON.stringify(r).replace(/'/g,"&apos;")})'>✏️ Edit</button>
+        <button class="btn-sm-outline" onclick="toggleStatusModul('${r["ID Modul"]}','${r["Status"]}')">🔁 ${r["Status"]==="Aktif"?"Nonaktifkan":"Aktifkan"}</button>
+        <button class="btn-sm-outline" style="color:var(--red);border-color:rgba(139,42,42,.3);" onclick="hapusModul('${r["ID Modul"]}','${(r["Judul"]||"").replace(/'/g,"\\'")}')">🗑️ Hapus</button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function openModulModal(row) {
+  hideAlert("modul-alert");
+  document.getElementById("mf-file").value = "";
+  document.getElementById("mf-file-info").textContent = "";
+  if (row && row["ID Modul"]) {
+    document.getElementById("mf-title").textContent = "Edit Modul";
+    document.getElementById("mf-id-modul").value  = row["ID Modul"];
+    document.getElementById("mf-judul").value     = row["Judul"] || "";
+    document.getElementById("mf-jenjang").value   = row["Jenjang"] || "SD";
+    document.getElementById("mf-mapel").value     = row["Mata Pelajaran"] || "";
+    document.getElementById("mf-deskripsi").value = row["Deskripsi"] || "";
+    document.getElementById("mf-status").value    = row["Status"] || "Aktif";
+    document.getElementById("mf-file-row").querySelector(".form-label").innerHTML =
+      "Ganti File PDF <span style=\"font-weight:400;color:rgba(255,255,255,.4);\">(opsional — kosongkan jika tidak ingin mengganti file)</span>";
+  } else {
+    document.getElementById("mf-title").textContent = "Upload Modul";
+    document.getElementById("mf-id-modul").value  = "";
+    document.getElementById("mf-judul").value     = "";
+    document.getElementById("mf-jenjang").value   = "SD";
+    document.getElementById("mf-mapel").value     = "";
+    document.getElementById("mf-deskripsi").value = "";
+    document.getElementById("mf-status").value    = "Aktif";
+    document.getElementById("mf-file-row").querySelector(".form-label").innerHTML =
+      "File PDF * <span style=\"font-weight:400;color:rgba(255,255,255,.4);\">(maks ±15MB)</span>";
+  }
+  openModal("modal-modul");
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function doSimpanModul() {
+  const idModul  = document.getElementById("mf-id-modul").value;
+  const judul    = document.getElementById("mf-judul").value.trim();
+  const jenjang  = document.getElementById("mf-jenjang").value;
+  const mapel    = document.getElementById("mf-mapel").value.trim();
+  const deskripsi= document.getElementById("mf-deskripsi").value.trim();
+  const status   = document.getElementById("mf-status").value;
+  const fileEl   = document.getElementById("mf-file");
+  const file     = fileEl.files[0];
+
+  if (!judul || !mapel) { showAlert("modul-alert","Judul dan Mata Pelajaran wajib diisi.","error"); return; }
+  if (!idModul && !file) { showAlert("modul-alert","File PDF wajib diupload.","error"); return; }
+  if (file && file.type !== "application/pdf") { showAlert("modul-alert","File harus berformat PDF.","error"); return; }
+  if (file && file.size > 16*1024*1024) { showAlert("modul-alert","Ukuran file maksimal ±15MB.","error"); return; }
+
+  const btn = document.getElementById("mf-submit-btn");
+  btn.disabled = true; btn.textContent = "Menyimpan...";
+  try {
+    let body = { judul, jenjang, mapel, deskripsi, status };
+    if (file) {
+      document.getElementById("mf-file-info").textContent = "Mengunggah file...";
+      body.fileBase64 = await fileToBase64(file);
+      body.fileName   = file.name;
+    }
+    let res;
+    if (idModul) {
+      body.idModul = idModul;
+      res = await apiPost("updateModul", body);
+    } else {
+      res = await apiPost("uploadModul", body);
+    }
+    if (!res.ok) { showAlert("modul-alert", res.error || "Gagal menyimpan modul.", "error"); return; }
+    toast(idModul ? "Modul berhasil diperbarui." : "Modul berhasil diupload.", "success");
+    closeModal("modal-modul");
+    loadModul();
+  } catch(e) {
+    showAlert("modul-alert", "Error: " + e.message, "error");
+  } finally {
+    btn.disabled = false; btn.textContent = "📚 Simpan Modul";
+  }
+}
+
+async function toggleStatusModul(idModul, statusSaatIni) {
+  const statusBaru = statusSaatIni === "Aktif" ? "Nonaktif" : "Aktif";
+  showLoading("Memperbarui status...");
+  try {
+    const res = await apiPost("updateModul", { idModul, status: statusBaru });
+    hideLoading();
+    if (!res.ok) { toast("Gagal: " + res.error, "error"); return; }
+    toast("Status modul diperbarui.", "success");
+    loadModul();
+  } catch(e) { hideLoading(); toast("Error: " + e.message, "error"); }
+}
+
+async function hapusModul(idModul, judul) {
+  if (!confirm(`Hapus modul "${judul}"? File di Drive juga akan dihapus permanen.`)) return;
+  showLoading("Menghapus modul...");
+  try {
+    const res = await apiPost("hapusModul", { idModul });
+    hideLoading();
+    if (!res.ok) { toast("Gagal hapus: " + res.error, "error"); return; }
+    toast("Modul dihapus.", "success");
+    loadModul();
+  } catch(e) { hideLoading(); toast("Error: " + e.message, "error"); }
+}
+
+// ── PREVIEW MODUL (view-only, render pakai PDF.js — tanpa tombol unduh) ──
+async function previewModulAdmin(idModul, judul) {
+  document.getElementById("mv-title").textContent = judul || "Pratinjau Modul";
+  const body = document.getElementById("mv-body");
+  body.innerHTML = `<div class="empty-state"><div class="es-icon">📄</div>Memuat modul...</div>`;
+  openModal("modal-modul-view");
+  try {
+    const res = await apiPost("getModulFile", { idModul });
+    if (!res.ok) { body.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div>${res.error||"Gagal memuat modul."}</div>`; return; }
+    await renderPdfBase64(res.data.base64, body);
+  } catch(e) {
+    body.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div>Error: ${e.message}</div>`;
+  }
+}
+
+async function renderPdfBase64(base64, container) {
+  container.innerHTML = "";
+  if (!window.pdfjsLib) { container.innerHTML = "PDF viewer tidak tersedia."; return; }
+  const raw = atob(base64);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const viewport = page.getViewport({ scale: 1.3 });
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width; canvas.height = viewport.height;
+    canvas.style.maxWidth = "100%"; canvas.style.marginBottom = "10px"; canvas.style.borderRadius = "6px";
+    canvas.oncontextmenu = () => false;
+    container.appendChild(canvas);
+    await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+  }
+}
 </script>
 </body>
 </html>
