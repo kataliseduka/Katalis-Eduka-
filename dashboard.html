@@ -656,6 +656,15 @@ body {
 
         <div class="section-card">
           <div class="sc-header">
+            <div><div class="sc-title">👨‍🎓 Daftar Siswa yang Ditangani</div><div class="sc-sub">Peserta dengan Tutor Utama = kamu</div></div>
+          </div>
+          <div class="sc-body" id="daftar-siswa-tutor">
+            <div class="empty-state"><div class="es-icon">👨‍🎓</div>Memuat daftar siswa...</div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-header">
             <div><div class="sc-title">📅 Jadwal Mengajar</div><div class="sc-sub">Sesi yang akan datang</div></div>
           </div>
           <div class="sc-body" id="jadwal-tutor-list">
@@ -677,16 +686,15 @@ body {
             <div class="alert alert-success" id="nilai-alert-ok">✅ Nilai berhasil disimpan!</div>
             <div class="alert alert-error" id="nilai-alert-err"></div>
             <div class="dash-form">
-              <div class="df-row">
-                <div>
-                  <label class="df-label">ID Peserta</label>
-                  <input class="df-input" id="n-id-peserta" placeholder="PST-001">
-                </div>
-                <div>
-                  <label class="df-label">Nama Peserta</label>
-                  <input class="df-input" id="n-nama-peserta" placeholder="Nama lengkap">
-                </div>
+              <div>
+                <label class="df-label">Pilih Siswa * <span style="color:rgba(255,255,255,.4);font-weight:400;">(dari daftar siswa yang kamu tangani)</span></label>
+                <select class="df-select" id="n-id-peserta-select" onchange="onSiswaNilaiChange()">
+                  <option value="">— Pilih Siswa —</option>
+                </select>
               </div>
+              <!-- Tersimpan otomatis dari pilihan siswa di atas -->
+              <input type="hidden" id="n-id-peserta">
+              <input type="hidden" id="n-nama-peserta">
               <div class="df-row">
                 <div>
                   <label class="df-label">Mata Pelajaran</label>
@@ -1196,16 +1204,36 @@ function renderBerandaPeserta(data) {
 //  RENDER: BERANDA TUTOR
 // ═══════════════════════════════════════════
 function renderBerandaTutor(data) {
-  const { tutor, jadwalMengajar, totalSesi } = data;
+  const { tutor, jadwalMengajar, totalSesi, daftarSiswa } = data;
 
   document.getElementById("gc-nama-tutor").textContent = (tutor?.["Nama Lengkap"] || state.nama).split(" ")[0];
 
   document.getElementById("stat-tutor").innerHTML = `
     <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-num">${jadwalMengajar.length}</div><div class="stat-label">Jadwal Aktif</div></div>
+    <div class="stat-card"><div class="stat-icon">👨‍🎓</div><div class="stat-num">${(daftarSiswa||[]).length}</div><div class="stat-label">Siswa Ditangani</div></div>
     <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-num">${totalSesi}</div><div class="stat-label">Total Sesi Selesai</div></div>
     <div class="stat-card"><div class="stat-icon">🎓</div><div class="stat-num">${tutor?.["Jenjang Pend."]||"—"}</div><div class="stat-label">Jenjang</div></div>
-    <div class="stat-card"><div class="stat-icon">💼</div><div class="stat-num">${tutor?.["Mode Mengajar"]||"—"}</div><div class="stat-label">Mode Mengajar</div></div>
   `;
+
+  // Daftar siswa yang ditangani (Tutor Utama = tutor ini)
+  const sEl = document.getElementById("daftar-siswa-tutor");
+  if (sEl) {
+    const siswa = daftarSiswa || [];
+    if (!siswa.length) {
+      sEl.innerHTML = `<div class="empty-state"><div class="es-icon">👨‍🎓</div>Belum ada siswa yang ditandai "Tutor Utama" kamu. Hubungi admin jika ini tidak sesuai.</div>`;
+    } else {
+      sEl.innerHTML = `<table class="tbl">
+        <thead><tr><th>ID</th><th>Nama</th><th>Jenjang/Kelas</th><th>Mode</th><th>Status</th></tr></thead>
+        <tbody>${siswa.map(s => `<tr>
+          <td style="font-size:11px;color:rgba(255,255,255,.5);">${s.idPeserta||"—"}</td>
+          <td>${s.nama||"—"}</td>
+          <td style="font-size:11px;">${s.jenjang||"—"} ${s.kelas && s.kelas !== "—" ? "· "+s.kelas : ""}</td>
+          <td style="font-size:11px;">${s.mode||"—"}</td>
+          <td>${badgeStatus(s.status||"Aktif")}</td>
+        </tr>`).join("")}
+        </tbody></table>`;
+    }
+  }
 
   const jEl = document.getElementById("jadwal-tutor-list");
   if (!jadwalMengajar.length) {
@@ -1512,13 +1540,14 @@ async function submitNilai() {
     rekomendasi: document.getElementById("n-rekomendasi").value.trim(),
   };
   if (!body.idPeserta || !body.mapel || body.nilai === undefined) {
-    showAlert("nilai-alert-err","ID Peserta, Mapel, dan Nilai wajib diisi.","error"); return;
+    showAlert("nilai-alert-err","Pilih siswa, isi Mapel, dan Nilai wajib diisi.","error"); return;
   }
   showLoading("Menyimpan nilai...");
   try {
     const res = await apiPost("inputNilai", body);
     if (!res.ok) throw new Error(res.error);
     showAlert("nilai-alert-ok", `Nilai disimpan! ID: ${res.data.idNilai} · Kategori: ${res.data.kategori}`);
+    document.getElementById("n-id-peserta-select").value = "";
     ["n-id-peserta","n-nama-peserta","n-mapel","n-topik","n-nilai","n-id-sesi","n-evaluasi","n-rekomendasi"]
       .forEach(id => { document.getElementById(id).value = ""; });
   } catch(e) {
@@ -1579,9 +1608,23 @@ async function submitAbsensi() {
 //  RENDER FORM HELPERS (untuk lazy load)
 // ═══════════════════════════════════════════
 function renderInputNilaiForm() {
+  // Isi dropdown siswa dari daftar siswa yang ditangani tutor ini
+  const siswaSel = document.getElementById("n-id-peserta-select");
+  if (siswaSel) {
+    const siswa = state.dashboardData?.daftarSiswa || [];
+    siswaSel.innerHTML = '<option value="">— Pilih Siswa —</option>';
+    siswa.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s.idPeserta || "";
+      opt.textContent = `${s.nama||"—"} (${s.idPeserta||"—"}) — ${s.jenjang||""}`;
+      opt.dataset.nama = s.nama || "";
+      siswaSel.appendChild(opt);
+    });
+  }
+
   // Form sudah ada di HTML — load daftar jadwal tutor jika belum ada
   const sel = document.getElementById("n-id-sesi");
-  if (sel && !sel.options.length && state.dashboardData?.jadwalMengajar) {
+  if (sel && sel.tagName === "SELECT" && !sel.options.length && state.dashboardData?.jadwalMengajar) {
     state.dashboardData.jadwalMengajar.forEach(j => {
       const opt = document.createElement("option");
       opt.value = j["ID Jadwal"] || "";
@@ -1589,6 +1632,13 @@ function renderInputNilaiForm() {
       sel.appendChild(opt);
     });
   }
+}
+
+function onSiswaNilaiChange() {
+  const sel  = document.getElementById("n-id-peserta-select");
+  const opt  = sel.options[sel.selectedIndex];
+  document.getElementById("n-id-peserta").value   = opt ? opt.value : "";
+  document.getElementById("n-nama-peserta").value = opt ? (opt.dataset.nama || "") : "";
 }
 function renderInputAbsensiForm() {
   // Isi dropdown jadwal dari state
