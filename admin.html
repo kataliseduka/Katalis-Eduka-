@@ -617,9 +617,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <div class="section-card">
         <div class="tbl-controls">
           <input class="search-input" id="search-modul" placeholder="🔍 Cari judul / mapel..." oninput="filterModul()">
-          <select class="filter-select" id="filter-modul-jenjang" onchange="filterModul()">
+          <select class="filter-select" id="filter-modul-jenjang" onchange="onFilterModulJenjangChange()">
             <option value="">Semua Jenjang</option>
             <option>SD</option><option>SMP</option><option>SMA</option><option>Mahasiswa</option><option>Umum</option>
+          </select>
+          <select class="filter-select" id="filter-modul-mapel" onchange="filterModul()">
+            <option value="">Semua Mapel</option>
           </select>
           <select class="filter-select" id="filter-modul-status" onchange="filterModul()">
             <option value="">Semua Status</option>
@@ -894,7 +897,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     <div class="form-grid">
       <div class="form-row">
         <label class="form-label">Jenjang Siswa *</label>
-        <select class="form-select" id="mf-jenjang">
+        <select class="form-select" id="mf-jenjang" onchange="onMfJenjangChange()">
           <option value="SD">SD</option>
           <option value="SMP">SMP</option>
           <option value="SMA">SMA</option>
@@ -904,7 +907,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       </div>
       <div class="form-row">
         <label class="form-label">Mata Pelajaran *</label>
-        <input class="form-input" id="mf-mapel" placeholder="Matematika, IPA, dll">
+        <select class="form-select" id="mf-mapel"></select>
       </div>
     </div>
     <div class="form-row">
@@ -959,6 +962,7 @@ let bcTarget = "semua";
 window.addEventListener("DOMContentLoaded", () => {
   updateClock();
   setInterval(updateClock, 1000);
+  loadTarifData();
   const saved = sessionStorage.getItem("k_admin_token");
   if (saved) {
     state.token   = saved;
@@ -991,6 +995,34 @@ async function apiPost(action, body = {}) {
     body: JSON.stringify({ action, token: state.token, ...body })
   });
   return res.json();
+}
+
+async function apiGet(action, params = {}) {
+  const qs = new URLSearchParams({ action, ...params }).toString();
+  const res = await fetch(API_URL + "?" + qs);
+  return res.json();
+}
+
+// ── DATA MAPEL/LAYANAN (dari sheet Tarif via endpoint publik) ──
+let tarifCache = null;
+
+async function loadTarifData() {
+  if (tarifCache) return tarifCache;
+  try {
+    const res = await apiGet("getPublicTarif");
+    tarifCache = res.ok ? res.data : [];
+  } catch (e) {
+    tarifCache = [];
+  }
+  return tarifCache;
+}
+
+// Daftar nama mapel/layanan unik untuk satu jenjang (atau semua jenjang kalau kosong)
+function getMapelOptions(jenjang) {
+  const groups = jenjang ? (tarifCache||[]).filter(g => g.jenjang === jenjang) : (tarifCache||[]);
+  const set = new Set();
+  groups.forEach(g => g.layanan.forEach(l => set.add(l.layanan)));
+  return [...set].sort();
 }
 
 // ── LOADING ──
@@ -1771,6 +1803,8 @@ cache.modul = [];
 async function loadModul() {
   const tbody = document.getElementById("tbody-modul");
   tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr>`;
+  await loadTarifData();
+  onFilterModulJenjangChange(); // isi dropdown mapel awal (Semua Jenjang → semua mapel)
   try {
     const res = await apiPost("getAllModul");
     if (!res.ok) { toast("Gagal memuat modul: " + res.error, "error"); return; }
@@ -1779,12 +1813,22 @@ async function loadModul() {
   } catch(e) { toast("Error: " + e.message, "error"); }
 }
 
+function onFilterModulJenjangChange() {
+  const jenjang = document.getElementById("filter-modul-jenjang").value;
+  const opts = getMapelOptions(jenjang);
+  document.getElementById("filter-modul-mapel").innerHTML =
+    `<option value="">Semua Mapel</option>` + opts.map(m => `<option>${m}</option>`).join("");
+  filterModul();
+}
+
 function filterModul() {
   const q       = (document.getElementById("search-modul").value || "").toLowerCase();
   const jenjang = document.getElementById("filter-modul-jenjang").value;
+  const mapel   = document.getElementById("filter-modul-mapel").value;
   const status  = document.getElementById("filter-modul-status").value;
   const rows = cache.modul.filter(r => {
     if (jenjang && r["Jenjang"] !== jenjang) return false;
+    if (mapel && r["Mata Pelajaran"] !== mapel) return false;
     if (status && r["Status"] !== status) return false;
     if (q && !((r["Judul"]||"").toLowerCase().includes(q) || (r["Mata Pelajaran"]||"").toLowerCase().includes(q))) return false;
     return true;
@@ -1820,6 +1864,20 @@ function renderModulTable(rows) {
   }).join("");
 }
 
+function onMfJenjangChange(selectedMapel) {
+  const jenjang = document.getElementById("mf-jenjang").value;
+  const opts = getMapelOptions(jenjang);
+  const sel = document.getElementById("mf-mapel");
+  sel.innerHTML = opts.map(m => `<option>${m}</option>`).join("");
+  if (selectedMapel) {
+    if (!opts.includes(selectedMapel)) {
+      sel.insertAdjacentHTML("beforeend", `<option selected>${selectedMapel}</option>`);
+    } else {
+      sel.value = selectedMapel;
+    }
+  }
+}
+
 function openModulModal(row) {
   hideAlert("modul-alert");
   document.getElementById("mf-file").value = "";
@@ -1829,7 +1887,7 @@ function openModulModal(row) {
     document.getElementById("mf-id-modul").value  = row["ID Modul"];
     document.getElementById("mf-judul").value     = row["Judul"] || "";
     document.getElementById("mf-jenjang").value   = row["Jenjang"] || "SD";
-    document.getElementById("mf-mapel").value     = row["Mata Pelajaran"] || "";
+    onMfJenjangChange(row["Mata Pelajaran"] || "");
     document.getElementById("mf-deskripsi").value = row["Deskripsi"] || "";
     document.getElementById("mf-status").value    = row["Status"] || "Aktif";
     document.getElementById("mf-file-row").querySelector(".form-label").innerHTML =
@@ -1839,7 +1897,7 @@ function openModulModal(row) {
     document.getElementById("mf-id-modul").value  = "";
     document.getElementById("mf-judul").value     = "";
     document.getElementById("mf-jenjang").value   = "SD";
-    document.getElementById("mf-mapel").value     = "";
+    onMfJenjangChange();
     document.getElementById("mf-deskripsi").value = "";
     document.getElementById("mf-status").value    = "Aktif";
     document.getElementById("mf-file-row").querySelector(".form-label").innerHTML =

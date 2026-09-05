@@ -872,9 +872,12 @@ body {
         <div class="section-card">
           <div class="modul-filters">
             <input type="text" id="modul-tutor-search" placeholder="🔍 Cari judul / mapel..." oninput="renderModulTutorList()">
-            <select id="modul-tutor-filter-jenjang" onchange="renderModulTutorList()">
+            <select id="modul-tutor-filter-jenjang" onchange="onModulTutorJenjangChange()">
               <option value="">Semua Jenjang</option>
               <option>SD</option><option>SMP</option><option>SMA</option><option>Mahasiswa</option><option>Umum</option>
+            </select>
+            <select id="modul-tutor-filter-mapel" onchange="renderModulTutorList()">
+              <option value="">Semua Mapel</option>
             </select>
           </div>
           <div class="sc-body" id="modul-tutor-list" style="padding:0;">
@@ -945,6 +948,28 @@ async function apiGet(action, params = {}) {
   const qs = new URLSearchParams({ action, ...params }).toString();
   const res = await fetch(API_URL + "?" + qs);
   return res.json();
+}
+
+// ── DATA MAPEL/LAYANAN (dari sheet Tarif via endpoint publik) ──
+let tarifCache = null;
+
+async function loadTarifData() {
+  if (tarifCache) return tarifCache;
+  try {
+    const res = await apiGet("getPublicTarif");
+    tarifCache = res.ok ? res.data : [];
+  } catch (e) {
+    tarifCache = [];
+  }
+  return tarifCache;
+}
+
+// Daftar nama mapel/layanan unik untuk satu jenjang (atau semua jenjang kalau kosong)
+function getMapelOptions(jenjang) {
+  const groups = jenjang ? (tarifCache||[]).filter(g => g.jenjang === jenjang) : (tarifCache||[]);
+  const set = new Set();
+  groups.forEach(g => g.layanan.forEach(l => set.add(l.layanan)));
+  return [...set].sort();
 }
 
 function formatRp(n) {
@@ -1840,6 +1865,8 @@ let modulTutorCache = [];
 async function loadModulTutor() {
   const el = document.getElementById("modul-tutor-list");
   el.innerHTML = `<div class="empty-state"><div class="es-icon">📚</div>Memuat modul...</div>`;
+  await loadTarifData();
+  onModulTutorJenjangChange(); // isi dropdown mapel awal (Semua Jenjang → semua mapel)
   try {
     const res = await apiPost("getDaftarModulTutor");
     if (!res.ok) { el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${res.error}</div>`; return; }
@@ -1850,12 +1877,22 @@ async function loadModulTutor() {
   }
 }
 
+function onModulTutorJenjangChange() {
+  const jenjang = document.getElementById("modul-tutor-filter-jenjang").value;
+  const opts = getMapelOptions(jenjang);
+  document.getElementById("modul-tutor-filter-mapel").innerHTML =
+    `<option value="">Semua Mapel</option>` + opts.map(m => `<option>${m}</option>`).join("");
+  renderModulTutorList();
+}
+
 function renderModulTutorList() {
   const el = document.getElementById("modul-tutor-list");
   const q       = (document.getElementById("modul-tutor-search").value || "").toLowerCase();
   const jenjang = document.getElementById("modul-tutor-filter-jenjang").value;
+  const mapel   = document.getElementById("modul-tutor-filter-mapel").value;
   const rows = modulTutorCache.filter(m => {
     if (jenjang && m["Jenjang"] !== jenjang) return false;
+    if (mapel && m["Mata Pelajaran"] !== mapel) return false;
     if (q && !((m["Judul"]||"").toLowerCase().includes(q) || (m["Mata Pelajaran"]||"").toLowerCase().includes(q))) return false;
     return true;
   });
@@ -1919,6 +1956,7 @@ async function renderPdfBase64(base64, container) {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+  loadTarifData();
   const savedToken = sessionStorage.getItem("k_token");
   const savedRole  = sessionStorage.getItem("k_role");
   const savedId    = sessionStorage.getItem("k_id");
