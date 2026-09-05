@@ -1813,7 +1813,8 @@ async function loadModul() {
   } catch(e) { toast("Error: " + e.message, "error"); }
 }
 
-function onFilterModulJenjangChange() {
+async function onFilterModulJenjangChange() {
+  await loadTarifData();
   const jenjang = document.getElementById("filter-modul-jenjang").value;
   const opts = getMapelOptions(jenjang);
   document.getElementById("filter-modul-mapel").innerHTML =
@@ -1864,7 +1865,8 @@ function renderModulTable(rows) {
   }).join("");
 }
 
-function onMfJenjangChange(selectedMapel) {
+async function onMfJenjangChange(selectedMapel) {
+  await loadTarifData();
   const jenjang = document.getElementById("mf-jenjang").value;
   const opts = getMapelOptions(jenjang);
   const sel = document.getElementById("mf-mapel");
@@ -1878,10 +1880,11 @@ function onMfJenjangChange(selectedMapel) {
   }
 }
 
-function openModulModal(row) {
+async function openModulModal(row) {
   hideAlert("modul-alert");
   document.getElementById("mf-file").value = "";
   document.getElementById("mf-file-info").textContent = "";
+  await loadTarifData();
   if (row && row["ID Modul"]) {
     document.getElementById("mf-title").textContent = "Edit Modul";
     document.getElementById("mf-id-modul").value  = row["ID Modul"];

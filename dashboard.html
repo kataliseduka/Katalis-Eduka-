@@ -1877,7 +1877,8 @@ async function loadModulTutor() {
   }
 }
 
-function onModulTutorJenjangChange() {
+async function onModulTutorJenjangChange() {
+  await loadTarifData();
   const jenjang = document.getElementById("modul-tutor-filter-jenjang").value;
   const opts = getMapelOptions(jenjang);
   document.getElementById("modul-tutor-filter-mapel").innerHTML =
