@@ -2232,14 +2232,27 @@ async function openGajiPokokModal() {
     const res = await apiPost("getStaffGajiList");
     if (!res.ok) { showAlert("gp-alert", res.error, "error"); return; }
     const rows = res.data || [];
-    document.getElementById("gp-list").innerHTML = rows.map(s => `
+    document.getElementById("gp-list").innerHTML = `
+      <div style="display:flex;gap:10px;padding:0 0 6px 0;font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.05em;">
+        <div style="flex:1;min-width:120px;">Staff</div>
+        <div style="width:130px;">Gaji Pokok (Rp)</div>
+        <div style="width:110px;">Tunjangan (Rp)</div>
+        <div style="width:38px;"></div>
+      </div>
+    ` + rows.map(s => `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);">
         <div style="flex:1;min-width:120px;">
           <div style="font-weight:600;">${s.nama}</div>
           <div style="font-size:11px;color:rgba(255,255,255,.4);">${s.jabatan||"—"} · ${s.status}</div>
         </div>
-        <input class="form-input" type="number" placeholder="Gaji Pokok" value="${s.gajiPokok}" id="gp-pokok-${s.idStaff}" style="width:130px;">
-        <input class="form-input" type="number" placeholder="Tunjangan" value="${s.tunjangan}" id="gp-tunjangan-${s.idStaff}" style="width:110px;">
+        <div style="width:130px;">
+          <div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:2px;">Gaji Pokok</div>
+          <input class="form-input" type="number" value="${s.gajiPokok}" id="gp-pokok-${s.idStaff}" style="width:100%;">
+        </div>
+        <div style="width:110px;">
+          <div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:2px;">Tunjangan</div>
+          <input class="form-input" type="number" value="${s.tunjangan}" id="gp-tunjangan-${s.idStaff}" style="width:100%;">
+        </div>
         <button class="btn btn-gold btn-sm" onclick="doSimpanGajiStaff('${s.idStaff}')">💾</button>
       </div>`).join("");
   } catch(e) { showAlert("gp-alert", e.message, "error"); }
