@@ -359,6 +359,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
         <span class="sb-icon">📚</span> Modul Belajar
       </button>
 
+      <div class="sb-section">HRIS</div>
+      <button class="sb-item" onclick="showPage('verifikasi')" data-page="verifikasi">
+        <span class="sb-icon">✅</span> Verifikasi Sesi
+        <span class="sb-badge" id="badge-verifikasi-pending" style="display:none">0</span>
+      </button>
+      <button class="sb-item" onclick="showPage('payroll')" data-page="payroll">
+        <span class="sb-icon">💵</span> Payroll &amp; Gaji
+      </button>
+      <button class="sb-item" onclick="showPage('kinerja-tutor')" data-page="kinerja-tutor">
+        <span class="sb-icon">📈</span> Kinerja Tutor
+      </button>
+      <button class="sb-item" onclick="showPage('kinerja-staff')" data-page="kinerja-staff">
+        <span class="sb-icon">🧑‍💼</span> Kinerja Staff
+      </button>
+
       <div class="sb-section">Komunikasi</div>
       <button class="sb-item" onclick="showPage('broadcast')" data-page="broadcast">
         <span class="sb-icon">📢</span> Broadcast WA
@@ -640,7 +655,123 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       </div>
     </div>
 
-    <!-- ═══ PAGE: BROADCAST ═══ -->
+    <!-- ═══ PAGE: VERIFIKASI SESI ═══ -->
+    <div class="page" id="page-verifikasi">
+      <div class="page-header">
+        <div class="page-title">Verifikasi Sesi &amp; Absensi</div>
+        <div class="page-desc">Konfirmasi sesi belajar yang sudah selesai. Hanya sesi yang <strong>Terverifikasi</strong> yang dihitung sebagai honor tutor di Payroll &amp; Laporan Keuangan.</div>
+      </div>
+      <div class="section-card">
+        <div class="tbl-controls">
+          <input class="search-input" id="search-verifikasi" placeholder="🔍 Cari peserta / tutor..." oninput="filterVerifikasi()">
+          <select class="filter-select" id="filter-verifikasi-status" onchange="filterVerifikasi()">
+            <option value="">Semua Status</option>
+            <option value="">Menunggu Verifikasi</option>
+            <option>Ya</option>
+            <option>Ditolak</option>
+          </select>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>Tanggal</th><th>Peserta</th><th>Tutor</th><th>Mapel</th>
+              <th>Hadir Peserta</th><th>Hadir Tutor</th><th>Bukti</th><th>Status</th><th>Aksi</th>
+            </tr></thead>
+            <tbody id="tbody-verifikasi"><tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PAGE: PAYROLL ═══ -->
+    <div class="page" id="page-payroll">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="page-title">Payroll &amp; Gaji</div>
+          <div class="page-desc">Gaji staff (pokok + tunjangan) dan honor tutor (dari sesi terverifikasi) dalam satu tempat.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="month" class="filter-select" id="payroll-periode" style="padding:8px 12px;">
+          <button class="btn btn-outline" onclick="openGajiPokokModal()">⚙️ Atur Gaji Pokok Staff</button>
+          <button class="btn btn-gold" onclick="doGeneratePayroll()">⚡ Generate Payroll Bulan Ini</button>
+        </div>
+      </div>
+
+      <div class="laporan-summary" id="payroll-summary">
+        <div class="ls-card"><div class="ls-label">Total Payroll (Periode Terlihat)</div><div class="ls-val" id="pr-total">—</div></div>
+        <div class="ls-card"><div class="ls-label">Sudah Dibayar</div><div class="ls-val white" id="pr-lunas">—</div></div>
+        <div class="ls-card"><div class="ls-label">Draft (Belum Dibayar)</div><div class="ls-val" id="pr-draft">—</div></div>
+        <div class="ls-card"><div class="ls-label">Jumlah Personel</div><div class="ls-val white" id="pr-count">—</div></div>
+      </div>
+
+      <div class="section-card">
+        <div class="tbl-controls">
+          <input class="search-input" id="search-payroll" placeholder="🔍 Cari nama..." oninput="filterPayroll()">
+          <select class="filter-select" id="filter-payroll-tipe" onchange="filterPayroll()">
+            <option value="">Semua Tipe</option><option>Staff</option><option>Tutor</option>
+          </select>
+          <select class="filter-select" id="filter-payroll-status" onchange="filterPayroll()">
+            <option value="">Semua Status</option><option>Draft</option><option>Lunas</option>
+          </select>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>Nama</th><th>Tipe</th><th>Periode</th><th>Sesi</th>
+              <th>Pendapatan Pokok</th><th>Bonus</th><th>Potongan</th><th>Total</th><th>Status</th><th>Aksi</th>
+            </tr></thead>
+            <tbody id="tbody-payroll"><tr><td colspan="10" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Pilih periode lalu klik Generate, atau tunggu data termuat...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PAGE: KINERJA TUTOR ═══ -->
+    <div class="page" id="page-kinerja-tutor">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="page-title">Kinerja Tutor</div>
+          <div class="page-desc">Gabungan metrik otomatis (kehadiran, sesi, rata-rata nilai peserta) dan penilaian manual dari admin/manajer.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="month" class="filter-select" id="kinerja-tutor-periode" style="padding:8px 12px;">
+          <button class="btn btn-gold" onclick="loadKinerjaTutor()">Tampilkan</button>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>Tutor</th><th>Total Sesi</th><th>Terverifikasi</th><th>Tingkat Kehadiran</th>
+              <th>Rata Nilai Peserta</th><th>Total Honor</th><th>Skor Manual</th><th>Aksi</th>
+            </tr></thead>
+            <tbody id="tbody-kinerja-tutor"><tr><td colspan="8" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PAGE: KINERJA STAFF ═══ -->
+    <div class="page" id="page-kinerja-staff">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="page-title">Kinerja Staff</div>
+          <div class="page-desc">Penilaian KPI staff internal (kedisiplinan, produktivitas, kualitas kerja, kerjasama tim, inisiatif) per periode.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="month" class="filter-select" id="kinerja-staff-periode" style="padding:8px 12px;">
+          <button class="btn btn-gold" onclick="loadKinerjaStaff()">Tampilkan</button>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Staff</th><th>Jabatan</th><th>Skor Terakhir</th><th>Tgl Dinilai</th><th>Aksi</th></tr></thead>
+            <tbody id="tbody-kinerja-staff"><tr><td colspan="5" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
     <div class="page" id="page-broadcast">
       <div class="page-header">
         <div class="page-title">Broadcast WhatsApp</div>
@@ -943,6 +1074,132 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   </div>
 </div>
 
+<!-- Modal: Atur Gaji Pokok Staff -->
+<div class="modal-backdrop" id="modal-gaji-pokok">
+  <div class="modal" style="max-width:640px;">
+    <button class="modal-close" onclick="closeModal('modal-gaji-pokok')">✕</button>
+    <div class="modal-title">Atur Gaji Pokok Staff</div>
+    <div class="modal-desc">Nilai ini dipakai otomatis saat generate payroll bulanan. Staff dengan Gaji Pokok &amp; Tunjangan 0 tidak akan dibuatkan slip.</div>
+    <div class="modal-alert" id="gp-alert"></div>
+    <div id="gp-list" style="max-height:50vh;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-gaji-pokok')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit Slip Gaji (bonus/potongan) -->
+<div class="modal-backdrop" id="modal-edit-payroll">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-edit-payroll')">✕</button>
+    <div class="modal-title">Edit Slip Gaji</div>
+    <div class="modal-desc" id="ep-info"></div>
+    <div class="modal-alert" id="ep-alert"></div>
+    <input type="hidden" id="ep-id-payroll">
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">Bonus (Rp)</label>
+        <input class="form-input" id="ep-bonus" type="number" value="0">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Potongan (Rp)</label>
+        <input class="form-input" id="ep-potongan" type="number" value="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Catatan</label>
+      <input class="form-input" id="ep-catatan" placeholder="Opsional — alasan bonus/potongan">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-payroll')">Batal</button>
+      <button class="btn btn-gold" onclick="doSimpanEditPayroll()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Penilaian Tutor -->
+<div class="modal-backdrop" id="modal-penilaian-tutor">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-penilaian-tutor')">✕</button>
+    <div class="modal-title">Penilaian Kinerja Tutor</div>
+    <div class="modal-desc" id="pt-info"></div>
+    <div class="modal-alert" id="pt-alert"></div>
+    <input type="hidden" id="pt-id-tutor">
+    <input type="hidden" id="pt-periode">
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">Penguasaan Materi (1-5)</label>
+        <select class="form-select" id="pt-penguasaan"><option value="5">5 — Sangat Baik</option><option value="4">4 — Baik</option><option value="3">3 — Cukup</option><option value="2">2 — Kurang</option><option value="1">1 — Buruk</option></select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Kedisiplinan Jadwal (1-5)</label>
+        <select class="form-select" id="pt-kedisiplinan"><option value="5">5 — Sangat Baik</option><option value="4">4 — Baik</option><option value="3">3 — Cukup</option><option value="2">2 — Kurang</option><option value="1">1 — Buruk</option></select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Komunikasi (1-5)</label>
+        <select class="form-select" id="pt-komunikasi"><option value="5">5 — Sangat Baik</option><option value="4">4 — Baik</option><option value="3">3 — Cukup</option><option value="2">2 — Kurang</option><option value="1">1 — Buruk</option></select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Kepuasan Peserta (1-5)</label>
+        <select class="form-select" id="pt-kepuasan"><option value="5">5 — Sangat Baik</option><option value="4">4 — Baik</option><option value="3">3 — Cukup</option><option value="2">2 — Kurang</option><option value="1">1 — Buruk</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Catatan</label>
+      <textarea class="form-input" id="pt-catatan" placeholder="Opsional — catatan evaluasi"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-penilaian-tutor')">Batal</button>
+      <button class="btn btn-gold" onclick="doSimpanPenilaianTutor()">💾 Simpan Penilaian</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Penilaian Staff -->
+<div class="modal-backdrop" id="modal-penilaian-staff">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-penilaian-staff')">✕</button>
+    <div class="modal-title">Penilaian Kinerja Staff</div>
+    <div class="modal-desc" id="ps-info"></div>
+    <div class="modal-alert" id="ps-alert"></div>
+    <input type="hidden" id="ps-id-staff">
+    <div class="form-row">
+      <label class="form-label">Periode</label>
+      <input type="month" class="form-input" id="ps-periode">
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">Kedisiplinan (1-5)</label>
+        <select class="form-select" id="ps-kedisiplinan"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Produktivitas (1-5)</label>
+        <select class="form-select" id="ps-produktivitas"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Kualitas Kerja (1-5)</label>
+        <select class="form-select" id="ps-kualitas"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Kerjasama Tim (1-5)</label>
+        <select class="form-select" id="ps-kerjasama"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Inisiatif (1-5)</label>
+        <select class="form-select" id="ps-inisiatif"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Catatan</label>
+      <textarea class="form-input" id="ps-catatan" placeholder="Opsional — catatan evaluasi"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-penilaian-staff')">Batal</button>
+      <button class="btn btn-gold" onclick="doSimpanPenilaianStaff()">💾 Simpan Penilaian</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 if (window['pdfjsLib']) {
@@ -954,7 +1211,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbz-lM8m9k7B88sjcCbdVfQW
 
 // ── STATE ──
 let state = { token: null, nama: null, id: null, jabatan: null, rekening: [] };
-let cache = { peserta: [], tutor: [], tagihan: [], jadwal: [] };
+let cache = { peserta: [], tutor: [], tagihan: [], jadwal: [], modul: [], absensi: [], payroll: [] };
 let currentPage = "dashboard";
 let bcTarget = "semua";
 
@@ -1102,7 +1359,7 @@ function showApp() {
 function doLogout() {
   sessionStorage.clear();
   state = { token:null, nama:null, id:null, jabatan:null };
-  cache = { peserta:[], tutor:[], tagihan:[], jadwal:[] };
+  cache = { peserta:[], tutor:[], tagihan:[], jadwal:[], modul:[], absensi:[], payroll:[] };
   document.getElementById("login-screen").style.display = "";
   document.getElementById("app").classList.remove("show");
   document.getElementById("lg-pin").value = "";
@@ -1123,6 +1380,10 @@ function showPage(page) {
   else if (page === "laporan") loadLaporan();
   else if (page === "notiflog") loadNotifLog();
   else if (page === "modul") loadModul();
+  else if (page === "verifikasi") loadVerifikasi();
+  else if (page === "payroll") loadPayrollPage();
+  else if (page === "kinerja-tutor") loadKinerjaTutor();
+  else if (page === "kinerja-staff") loadKinerjaStaff();
 }
 
 function refreshCurrentPage() { showPage(currentPage); }
@@ -1732,6 +1993,381 @@ function printLaporan() {
   </div>
   <h3>Detail Tagihan Lunas</h3>${tbl}
   <script>window.print();<\/script></body></html>`);
+}
+
+// ══════════════════════════════════════════════════════
+// ── HRIS: VERIFIKASI SESI ──
+// ══════════════════════════════════════════════════════
+async function loadVerifikasi() {
+  const tbody = document.getElementById("tbody-verifikasi");
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr>`;
+  try {
+    const res = await apiPost("getAllAbsensi");
+    if (!res.ok) { toast("Gagal memuat: " + res.error, "error"); return; }
+    cache.absensi = res.data || [];
+    updateBadgeVerifikasi();
+    filterVerifikasi();
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+function updateBadgeVerifikasi() {
+  const n = (cache.absensi || []).filter(r => !r["Diverifikasi"]).length;
+  const badge = document.getElementById("badge-verifikasi-pending");
+  if (n > 0) { badge.style.display = "inline-block"; badge.textContent = n; }
+  else badge.style.display = "none";
+}
+
+function filterVerifikasi() {
+  const q = (document.getElementById("search-verifikasi").value || "").toLowerCase();
+  const status = document.getElementById("filter-verifikasi-status").value;
+  const rows = (cache.absensi || []).filter(r => {
+    const st = r["Diverifikasi"] || "";
+    if (status === "" && document.getElementById("filter-verifikasi-status").selectedIndex === 1 && st !== "") return false;
+    if (status && st !== status) return false;
+    if (q && !((r["Nama Peserta"]||"").toLowerCase().includes(q) || (r["Nama Tutor"]||"").toLowerCase().includes(q))) return false;
+    return true;
+  });
+  renderVerifikasiTable(rows);
+}
+
+function renderVerifikasiTable(rows) {
+  const tbody = document.getElementById("tbody-verifikasi");
+  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Tidak ada data.</td></tr>`; return; }
+  tbody.innerHTML = rows.map(r => {
+    const st = r["Diverifikasi"] || "Menunggu";
+    const badge = st === "Ya" ? `<span class="badge badge-green">Terverifikasi</span>`
+      : st === "Ditolak" ? `<span class="badge badge-red">Ditolak</span>`
+      : `<span class="badge badge-orange">Menunggu</span>`;
+    const aksi = (!r["Diverifikasi"])
+      ? `<button class="btn btn-gold btn-sm" onclick="doVerifikasiAbsensi('${r["ID Absensi"]}')">✅ Verifikasi</button>
+         <button class="btn-sm-outline" onclick="doTolakAbsensi('${r["ID Absensi"]}')">✕ Tolak</button>`
+      : `—`;
+    const bukti = r["Foto Bukti (Link)"] ? `<a href="${r["Foto Bukti (Link)"]}" target="_blank" class="btn-sm-outline">📸 Lihat</a>` : "—";
+    return `<tr>
+      <td>${formatTgl(r["Tanggal"])}</td><td>${r["Nama Peserta"]||"—"}</td><td>${r["Nama Tutor"]||"—"}</td>
+      <td>${r["Mata Pelajaran"]||"—"}</td><td>${r["Kehadiran Peserta"]||"—"}</td><td>${r["Kehadiran Tutor"]||"—"}</td>
+      <td>${bukti}</td><td>${badge}</td><td>${aksi}</td>
+    </tr>`;
+  }).join("");
+}
+
+async function doVerifikasiAbsensi(idAbsensi) {
+  try {
+    const res = await apiPost("verifikasiAbsensi", { idAbsensi });
+    if (!res.ok) { toast(res.error, "error"); return; }
+    toast(res.data.pesan, "success");
+    loadVerifikasi();
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+async function doTolakAbsensi(idAbsensi) {
+  const alasan = prompt("Alasan penolakan (opsional):", "");
+  if (alasan === null) return;
+  try {
+    const res = await apiPost("tolakAbsensi", { idAbsensi, alasan });
+    if (!res.ok) { toast(res.error, "error"); return; }
+    toast(res.data.pesan, "success");
+    loadVerifikasi();
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+// ══════════════════════════════════════════════════════
+// ── HRIS: PAYROLL & GAJI ──
+// ══════════════════════════════════════════════════════
+function currentPeriode(inputId) {
+  const el = document.getElementById(inputId);
+  if (!el.value) {
+    const d = new Date();
+    el.value = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+  }
+  return el.value;
+}
+
+async function loadPayrollPage() {
+  currentPeriode("payroll-periode");
+  const tbody = document.getElementById("tbody-payroll");
+  tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr>`;
+  try {
+    const res = await apiPost("getAllPayroll");
+    if (!res.ok) { toast("Gagal memuat payroll: " + res.error, "error"); return; }
+    cache.payroll = res.data || [];
+    filterPayroll();
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+async function doGeneratePayroll() {
+  const periode = currentPeriode("payroll-periode");
+  showLoading("Membuat slip gaji untuk periode " + periode + "...");
+  try {
+    const res = await apiPost("generatePayrollBulanan", { periode });
+    hideLoading();
+    if (!res.ok) { toast(res.error, "error"); return; }
+    toast(res.data.pesan, "success");
+    loadPayrollPage();
+  } catch(e) { hideLoading(); toast("Error: " + e.message, "error"); }
+}
+
+function filterPayroll() {
+  const periode = document.getElementById("payroll-periode").value;
+  const q = (document.getElementById("search-payroll").value || "").toLowerCase();
+  const tipe = document.getElementById("filter-payroll-tipe").value;
+  const status = document.getElementById("filter-payroll-status").value;
+  const rows = (cache.payroll || []).filter(r => {
+    if (periode && r["Periode"] !== periode) return false;
+    if (tipe && r["Tipe"] !== tipe) return false;
+    if (status && r["Status"] !== status) return false;
+    if (q && !(r["Nama Personel"]||"").toLowerCase().includes(q)) return false;
+    return true;
+  });
+  renderPayrollSummary(rows);
+  renderPayrollTable(rows);
+}
+
+function renderPayrollSummary(rows) {
+  const total = rows.reduce((s,r)=>s+(Number(r["Total Gaji (Rp)"])||0),0);
+  const lunasRows = rows.filter(r=>r["Status"]==="Lunas");
+  const draftRows = rows.filter(r=>r["Status"]!=="Lunas");
+  document.getElementById("pr-total").textContent = formatRp(total);
+  document.getElementById("pr-lunas").textContent = lunasRows.length + " slip";
+  document.getElementById("pr-draft").textContent = draftRows.length + " slip";
+  document.getElementById("pr-count").textContent = rows.length;
+}
+
+function renderPayrollTable(rows) {
+  const tbody = document.getElementById("tbody-payroll");
+  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Belum ada slip gaji untuk periode ini. Klik "Generate Payroll Bulan Ini".</td></tr>`; return; }
+  tbody.innerHTML = rows.map(r => {
+    const isLunas = r["Status"] === "Lunas";
+    const badge = isLunas ? `<span class="badge badge-green">Lunas</span>` : `<span class="badge badge-orange">Draft</span>`;
+    const aksi = isLunas
+      ? `<button class="btn-sm-outline" onclick="cetakSlipGaji('${r["ID Payroll"]}')">🖨️ Slip</button>`
+      : `<button class="btn-sm-outline" onclick="openEditPayrollModal('${r["ID Payroll"]}')">✏️ Edit</button>
+         <button class="btn btn-gold btn-sm" onclick="doBayarPayroll('${r["ID Payroll"]}')">💰 Bayar</button>
+         <button class="btn-sm-outline" onclick="doHapusPayroll('${r["ID Payroll"]}')" style="color:#e57373;">🗑️</button>`;
+    return `<tr>
+      <td>${r["Nama Personel"]}</td><td>${r["Tipe"]}</td><td>${r["Periode"]}</td><td>${r["Jumlah Sesi"]||"—"}</td>
+      <td>${formatRp(r["Pendapatan Pokok (Rp)"])}</td><td>${formatRp(r["Bonus (Rp)"])}</td><td>${formatRp(r["Potongan (Rp)"])}</td>
+      <td><strong>${formatRp(r["Total Gaji (Rp)"])}</strong></td><td>${badge}</td><td style="white-space:nowrap;">${aksi}</td>
+    </tr>`;
+  }).join("");
+}
+
+async function doBayarPayroll(idPayroll) {
+  if (!confirm("Tandai slip gaji ini sebagai Lunas? Notifikasi WA akan otomatis terkirim.")) return;
+  try {
+    const res = await apiPost("bayarPayroll", { idPayroll });
+    if (!res.ok) { toast(res.error, "error"); return; }
+    toast(res.data.pesan, "success");
+    loadPayrollPage();
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+async function doHapusPayroll(idPayroll) {
+  if (!confirm("Hapus draft slip gaji ini?")) return;
+  try {
+    const res = await apiPost("hapusPayroll", { idPayroll });
+    if (!res.ok) { toast(res.error, "error"); return; }
+    toast(res.data.pesan, "success");
+    loadPayrollPage();
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+function openEditPayrollModal(idPayroll) {
+  const p = (cache.payroll || []).find(r => r["ID Payroll"] === idPayroll);
+  if (!p) return;
+  hideAlert("ep-alert");
+  document.getElementById("ep-id-payroll").value = idPayroll;
+  document.getElementById("ep-info").textContent = p["Nama Personel"] + " · " + p["Tipe"] + " · " + p["Periode"] + " · Pendapatan pokok: " + formatRp(p["Pendapatan Pokok (Rp)"]);
+  document.getElementById("ep-bonus").value = Number(p["Bonus (Rp)"]) || 0;
+  document.getElementById("ep-potongan").value = Number(p["Potongan (Rp)"]) || 0;
+  document.getElementById("ep-catatan").value = p["Catatan"] || "";
+  openModal("modal-edit-payroll");
+}
+
+async function doSimpanEditPayroll() {
+  const idPayroll = document.getElementById("ep-id-payroll").value;
+  const bonus = document.getElementById("ep-bonus").value;
+  const potongan = document.getElementById("ep-potongan").value;
+  const catatan = document.getElementById("ep-catatan").value;
+  try {
+    const res = await apiPost("updatePayroll", { idPayroll, bonus, potongan, catatan });
+    if (!res.ok) { showAlert("ep-alert", res.error, "error"); return; }
+    toast("Slip gaji diperbarui.", "success");
+    closeModal("modal-edit-payroll");
+    loadPayrollPage();
+  } catch(e) { showAlert("ep-alert", e.message, "error"); }
+}
+
+function cetakSlipGaji(idPayroll) {
+  const p = (cache.payroll || []).find(r => r["ID Payroll"] === idPayroll);
+  if (!p) return;
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><title>Slip Gaji - ${p["Nama Personel"]}</title>
+  <style>body{font-family:sans-serif;padding:32px;color:#111;}h1{font-size:20px;margin-bottom:2px;}
+  .sub{color:#666;font-size:13px;margin-bottom:24px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:16px;}
+  td{padding:8px 12px;border-bottom:1px solid #eee;} td:first-child{color:#666;}
+  .total{font-size:18px;font-weight:700;color:#C9A84C;}
+  @media print{button{display:none;}}</style></head><body>
+  <h1>Slip Gaji — Katalis Eduka</h1>
+  <div class="sub">Periode ${p["Periode"]} · Dicetak ${new Date().toLocaleString("id-ID")}</div>
+  <table>
+    <tr><td>Nama</td><td>${p["Nama Personel"]}</td></tr>
+    <tr><td>Tipe</td><td>${p["Tipe"]}</td></tr>
+    ${p["Tipe"]==="Tutor" ? `<tr><td>Jumlah Sesi</td><td>${p["Jumlah Sesi"]}</td></tr>` : ``}
+    <tr><td>Pendapatan Pokok</td><td>${formatRp(p["Pendapatan Pokok (Rp)"])}</td></tr>
+    <tr><td>Bonus</td><td>${formatRp(p["Bonus (Rp)"])}</td></tr>
+    <tr><td>Potongan</td><td>-${formatRp(p["Potongan (Rp)"])}</td></tr>
+    <tr><td class="total">Total</td><td class="total">${formatRp(p["Total Gaji (Rp)"])}</td></tr>
+    <tr><td>Tgl Dibayar</td><td>${formatTgl(p["Tgl Dibayar"])}</td></tr>
+  </table>
+  <script>window.print();<\/script></body></html>`);
+}
+
+async function openGajiPokokModal() {
+  hideAlert("gp-alert");
+  document.getElementById("gp-list").innerHTML = `<div style="text-align:center;padding:20px;color:rgba(255,255,255,.3);">Memuat...</div>`;
+  openModal("modal-gaji-pokok");
+  try {
+    const res = await apiPost("getStaffGajiList");
+    if (!res.ok) { showAlert("gp-alert", res.error, "error"); return; }
+    const rows = res.data || [];
+    document.getElementById("gp-list").innerHTML = rows.map(s => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+        <div style="flex:1;min-width:120px;">
+          <div style="font-weight:600;">${s.nama}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);">${s.jabatan||"—"} · ${s.status}</div>
+        </div>
+        <input class="form-input" type="number" placeholder="Gaji Pokok" value="${s.gajiPokok}" id="gp-pokok-${s.idStaff}" style="width:130px;">
+        <input class="form-input" type="number" placeholder="Tunjangan" value="${s.tunjangan}" id="gp-tunjangan-${s.idStaff}" style="width:110px;">
+        <button class="btn btn-gold btn-sm" onclick="doSimpanGajiStaff('${s.idStaff}')">💾</button>
+      </div>`).join("");
+  } catch(e) { showAlert("gp-alert", e.message, "error"); }
+}
+
+async function doSimpanGajiStaff(idStaff) {
+  const gajiPokok = document.getElementById("gp-pokok-" + idStaff).value;
+  const tunjangan = document.getElementById("gp-tunjangan-" + idStaff).value;
+  try {
+    const res = await apiPost("updateStaffGaji", { idStaff, gajiPokok, tunjangan });
+    if (!res.ok) { showAlert("gp-alert", res.error, "error"); return; }
+    toast("Gaji staff diperbarui.", "success");
+  } catch(e) { showAlert("gp-alert", e.message, "error"); }
+}
+
+// ══════════════════════════════════════════════════════
+// ── HRIS: KINERJA TUTOR ──
+// ══════════════════════════════════════════════════════
+async function loadKinerjaTutor() {
+  const periode = currentPeriode("kinerja-tutor-periode");
+  const tbody = document.getElementById("tbody-kinerja-tutor");
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr>`;
+  try {
+    const res = await apiPost("getKinerjaTutor", { periode });
+    if (!res.ok) { toast("Gagal memuat: " + res.error, "error"); return; }
+    const rows = res.data || [];
+    if (!rows.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Tidak ada tutor aktif.</td></tr>`; return; }
+    tbody.innerHTML = rows.map(t => `
+      <tr>
+        <td>${t.nama}</td><td>${t.totalSesi}</td><td>${t.sesiTerverifikasi}</td>
+        <td>${t.tingkatKehadiran}%</td><td>${t.rataNilaiPeserta ?? "—"}</td>
+        <td>${formatRp(t.totalHonor)}</td>
+        <td>${t.skorManual ? `<span class="badge badge-green">${t.skorManual}</span>` : `<span class="badge badge-orange">Belum dinilai</span>`}</td>
+        <td><button class="btn btn-gold btn-sm" onclick='openPenilaianTutorModal(${JSON.stringify(t).replace(/'/g,"&apos;")})'>📝 Nilai</button></td>
+      </tr>`).join("");
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+function openPenilaianTutorModal(t) {
+  hideAlert("pt-alert");
+  document.getElementById("pt-id-tutor").value = t.idTutor;
+  document.getElementById("pt-periode").value = t.periode;
+  document.getElementById("pt-info").textContent = t.nama + " · Periode " + t.periode;
+  document.getElementById("pt-penguasaan").value = "5";
+  document.getElementById("pt-kedisiplinan").value = "5";
+  document.getElementById("pt-komunikasi").value = "5";
+  document.getElementById("pt-kepuasan").value = "5";
+  document.getElementById("pt-catatan").value = "";
+  openModal("modal-penilaian-tutor");
+}
+
+async function doSimpanPenilaianTutor() {
+  const idTutor = document.getElementById("pt-id-tutor").value;
+  const periode = document.getElementById("pt-periode").value;
+  const penguasaanMateri = document.getElementById("pt-penguasaan").value;
+  const kedisiplinan = document.getElementById("pt-kedisiplinan").value;
+  const komunikasi = document.getElementById("pt-komunikasi").value;
+  const kepuasanPeserta = document.getElementById("pt-kepuasan").value;
+  const catatan = document.getElementById("pt-catatan").value;
+  try {
+    const res = await apiPost("tambahPenilaianTutor", { idTutor, periode, penguasaanMateri, kedisiplinan, komunikasi, kepuasanPeserta, catatan });
+    if (!res.ok) { showAlert("pt-alert", res.error, "error"); return; }
+    toast("Penilaian tersimpan. Skor rata-rata: " + res.data.skorRataRata, "success");
+    closeModal("modal-penilaian-tutor");
+    loadKinerjaTutor();
+  } catch(e) { showAlert("pt-alert", e.message, "error"); }
+}
+
+// ══════════════════════════════════════════════════════
+// ── HRIS: KINERJA STAFF ──
+// ══════════════════════════════════════════════════════
+async function loadKinerjaStaff() {
+  const periode = currentPeriode("kinerja-staff-periode");
+  const tbody = document.getElementById("tbody-kinerja-staff");
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr>`;
+  try {
+    const [staffRes, penilaianRes] = await Promise.all([
+      apiPost("getStaffGajiList"),
+      apiPost("getAllPenilaianStaff")
+    ]);
+    if (!staffRes.ok) { toast("Gagal memuat: " + staffRes.error, "error"); return; }
+    const staffAktif = (staffRes.data || []).filter(s => s.status === "Aktif");
+    const penilaian = penilaianRes.ok ? (penilaianRes.data || []) : [];
+    if (!staffAktif.length) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Tidak ada staff aktif.</td></tr>`; return; }
+    tbody.innerHTML = staffAktif.map(s => {
+      const terbaru = penilaian.find(p => p["ID Staff"] === s.idStaff && p["Periode"] === periode)
+                    || penilaian.find(p => p["ID Staff"] === s.idStaff);
+      return `<tr>
+        <td>${s.nama}</td><td>${s.jabatan||"—"}</td>
+        <td>${terbaru ? `<span class="badge badge-green">${terbaru["Skor Rata-rata"]}</span>` : `<span class="badge badge-orange">Belum dinilai</span>`}</td>
+        <td>${terbaru ? formatTgl(terbaru["Tgl Dinilai"]) : "—"}</td>
+        <td><button class="btn btn-gold btn-sm" onclick="openPenilaianStaffModal('${s.idStaff}','${s.nama.replace(/'/g,"&apos;")}')">📝 Nilai</button></td>
+      </tr>`;
+    }).join("");
+  } catch(e) { toast("Error: " + e.message, "error"); }
+}
+
+function openPenilaianStaffModal(idStaff, nama) {
+  hideAlert("ps-alert");
+  document.getElementById("ps-id-staff").value = idStaff;
+  document.getElementById("ps-info").textContent = nama;
+  document.getElementById("ps-periode").value = document.getElementById("kinerja-staff-periode").value || currentPeriode("kinerja-staff-periode");
+  document.getElementById("ps-kedisiplinan").value = "5";
+  document.getElementById("ps-produktivitas").value = "5";
+  document.getElementById("ps-kualitas").value = "5";
+  document.getElementById("ps-kerjasama").value = "5";
+  document.getElementById("ps-inisiatif").value = "5";
+  document.getElementById("ps-catatan").value = "";
+  openModal("modal-penilaian-staff");
+}
+
+async function doSimpanPenilaianStaff() {
+  const idStaff = document.getElementById("ps-id-staff").value;
+  const periode = document.getElementById("ps-periode").value;
+  const kedisiplinan = document.getElementById("ps-kedisiplinan").value;
+  const produktivitas = document.getElementById("ps-produktivitas").value;
+  const kualitasKerja = document.getElementById("ps-kualitas").value;
+  const kerjasamaTim = document.getElementById("ps-kerjasama").value;
+  const inisiatif = document.getElementById("ps-inisiatif").value;
+  const catatan = document.getElementById("ps-catatan").value;
+  if (!periode) { showAlert("ps-alert", "Periode wajib diisi.", "error"); return; }
+  try {
+    const res = await apiPost("tambahPenilaianStaff", { idStaff, periode, kedisiplinan, produktivitas, kualitasKerja, kerjasamaTim, inisiatif, catatan });
+    if (!res.ok) { showAlert("ps-alert", res.error, "error"); return; }
+    toast("Penilaian tersimpan. Skor rata-rata: " + res.data.skorRataRata, "success");
+    closeModal("modal-penilaian-staff");
+    loadKinerjaStaff();
+  } catch(e) { showAlert("ps-alert", e.message, "error"); }
 }
 
 // ── BROADCAST ──
