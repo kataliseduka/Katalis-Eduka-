@@ -1300,6 +1300,23 @@ function toast(msg, type = "info") {
 
 // ── UTILS ──
 function formatRp(n) { return "Rp " + Number(n||0).toLocaleString("id-ID"); }
+// ★ FIX: helper normalisasi periode. Backend mengembalikan kolom "Periode"
+// sebagai string ISO datetime penuh ("2026-09-01T00:00:00.000Z") kalau di
+// sheet Payroll/Penilaian_Tutor/Penilaian_Staff kolom itu tersimpan sebagai
+// Date object (kasus paling umum), atau sebagai string "2026-09" kalau sudah
+// teks murni. normPeriode() SELALU menghasilkan "yyyy-MM" supaya bisa
+// dibandingkan dengan aman ke nilai <input type="month">. Tanpa ini, filter
+// tabel Payroll & pencocokan penilaian staff/tutor per periode selalu gagal
+// match sehingga tabel tampak kosong walau data sudah ada di backend.
+function normPeriode(s) { return String(s || "").slice(0, 7); }
+function formatPeriode(s) {
+  const p = normPeriode(s);
+  if (!p) return "—";
+  const parts = p.split("-");
+  const bulanNama = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  const idx = parseInt(parts[1], 10) - 1;
+  return (bulanNama[idx] || parts[1]) + " " + parts[0];
+}
 function formatTgl(s) {
   if (!s) return "—";
   const d = new Date(s);
@@ -2113,7 +2130,10 @@ function filterPayroll() {
   const tipe = document.getElementById("filter-payroll-tipe").value;
   const status = document.getElementById("filter-payroll-status").value;
   const rows = (cache.payroll || []).filter(r => {
-    if (periode && r["Periode"] !== periode) return false;
+    // ★ FIX: normPeriode() menggantikan r["Periode"] !== periode yang sebelumnya
+    // selalu true (tabel selalu kosong) karena r["Periode"] berupa string ISO
+    // datetime penuh sedangkan periode dari <input type="month"> cuma "yyyy-MM".
+    if (periode && normPeriode(r["Periode"]) !== periode) return false;
     if (tipe && r["Tipe"] !== tipe) return false;
     if (status && r["Status"] !== status) return false;
     if (q && !(r["Nama Personel"]||"").toLowerCase().includes(q)) return false;
@@ -2145,7 +2165,7 @@ function renderPayrollTable(rows) {
          <button class="btn btn-gold btn-sm" onclick="doBayarPayroll('${r["ID Payroll"]}')">💰 Bayar</button>
          <button class="btn-sm-outline" onclick="doHapusPayroll('${r["ID Payroll"]}')" style="color:#e57373;">🗑️</button>`;
     return `<tr>
-      <td>${r["Nama Personel"]}</td><td>${r["Tipe"]}</td><td>${r["Periode"]}</td><td>${r["Jumlah Sesi"]||"—"}</td>
+      <td>${r["Nama Personel"]}</td><td>${r["Tipe"]}</td><td>${formatPeriode(r["Periode"])}</td><td>${r["Jumlah Sesi"]||"—"}</td>
       <td>${formatRp(r["Pendapatan Pokok (Rp)"])}</td><td>${formatRp(r["Bonus (Rp)"])}</td><td>${formatRp(r["Potongan (Rp)"])}</td>
       <td><strong>${formatRp(r["Total Gaji (Rp)"])}</strong></td><td>${badge}</td><td style="white-space:nowrap;">${aksi}</td>
     </tr>`;
@@ -2177,7 +2197,7 @@ function openEditPayrollModal(idPayroll) {
   if (!p) return;
   hideAlert("ep-alert");
   document.getElementById("ep-id-payroll").value = idPayroll;
-  document.getElementById("ep-info").textContent = p["Nama Personel"] + " · " + p["Tipe"] + " · " + p["Periode"] + " · Pendapatan pokok: " + formatRp(p["Pendapatan Pokok (Rp)"]);
+  document.getElementById("ep-info").textContent = p["Nama Personel"] + " · " + p["Tipe"] + " · " + formatPeriode(p["Periode"]) + " · Pendapatan pokok: " + formatRp(p["Pendapatan Pokok (Rp)"]);
   document.getElementById("ep-bonus").value = Number(p["Bonus (Rp)"]) || 0;
   document.getElementById("ep-potongan").value = Number(p["Potongan (Rp)"]) || 0;
   document.getElementById("ep-catatan").value = p["Catatan"] || "";
@@ -2210,7 +2230,7 @@ function cetakSlipGaji(idPayroll) {
   .total{font-size:18px;font-weight:700;color:#C9A84C;}
   @media print{button{display:none;}}</style></head><body>
   <h1>Slip Gaji — Katalis Eduka</h1>
-  <div class="sub">Periode ${p["Periode"]} · Dicetak ${new Date().toLocaleString("id-ID")}</div>
+  <div class="sub">Periode ${formatPeriode(p["Periode"])} · Dicetak ${new Date().toLocaleString("id-ID")}</div>
   <table>
     <tr><td>Nama</td><td>${p["Nama Personel"]}</td></tr>
     <tr><td>Tipe</td><td>${p["Tipe"]}</td></tr>
@@ -2338,7 +2358,11 @@ async function loadKinerjaStaff() {
     const penilaian = penilaianRes.ok ? (penilaianRes.data || []) : [];
     if (!staffAktif.length) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Tidak ada staff aktif.</td></tr>`; return; }
     tbody.innerHTML = staffAktif.map(s => {
-      const terbaru = penilaian.find(p => p["ID Staff"] === s.idStaff && p["Periode"] === periode)
+      // ★ FIX: normPeriode() menggantikan p["Periode"] === periode yang sebelumnya
+      // selalu gagal match (kolom Periode balik sebagai ISO datetime), sehingga
+      // badge nilai staff selalu jatuh ke fallback "penilaian terlama" yang mana
+      // pun, bukan penilaian periode yang sedang dipilih.
+      const terbaru = penilaian.find(p => p["ID Staff"] === s.idStaff && normPeriode(p["Periode"]) === periode)
                     || penilaian.find(p => p["ID Staff"] === s.idStaff);
       return `<tr>
         <td>${s.nama}</td><td>${s.jabatan||"—"}</td>

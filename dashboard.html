@@ -886,6 +886,39 @@ body {
         </div>
       </div>
 
+      <!-- ══ HALAMAN: GAJI & KINERJA SAYA (TUTOR) ══ -->
+      <div class="page" id="page-gaji-kinerja-tutor">
+        <div class="page-header">
+          <div class="page-kicker">Kepegawaian</div>
+          <h2 class="page-title">Gaji &amp; <em>Kinerja Saya</em></h2>
+          <p class="page-desc">Ringkasan kinerja mengajar dan riwayat slip gaji kamu.</p>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-header">
+            <div><div class="sc-title">📊 Kinerja per Periode</div><div class="sc-sub" id="gk-periode-label">—</div></div>
+            <input type="month" class="df-input" id="gk-periode" style="max-width:170px;padding:8px 12px;" onchange="loadGajiKinerjaSaya()">
+          </div>
+          <div class="sc-body">
+            <div class="stat-grid" id="stat-kinerja-saya"></div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-header"><div class="sc-title">⭐ Penilaian dari Admin</div><div class="sc-sub">Riwayat penilaian manual per periode</div></div>
+          <div class="sc-body" id="riwayat-penilaian-saya" style="padding:0;">
+            <div class="empty-state"><div class="es-icon">⭐</div>Memuat...</div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-header"><div class="sc-title">💰 Riwayat Slip Gaji</div><div class="sc-sub">Semua periode</div></div>
+          <div class="sc-body" id="riwayat-payroll-saya" style="padding:0;">
+            <div class="empty-state"><div class="es-icon">💰</div>Memuat...</div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </main>
 </div><!-- /app -->
@@ -992,7 +1025,7 @@ function badgeStatus(s) {
   const map = {
     "Lunas":"badge-green","Aktif":"badge-green","Terjadwal":"badge-blue","Hadir":"badge-green",
     "Tidak Hadir":"badge-red","Izin":"badge-gold","Menunggu Konfirmasi":"badge-gold",
-    "Pending":"badge-orange","Menunggu Konfirmasi":"badge-orange",
+    "Pending":"badge-orange","Menunggu Konfirmasi":"badge-orange","Draft":"badge-orange",
     "Batal":"badge-red","Nonaktif":"badge-red","Pending Verifikasi":"badge-orange"
   };
   return `<span class="badge ${map[s]||'badge-gray'}">${s||'—'}</span>`;
@@ -1127,6 +1160,7 @@ const navConfig = {
     { id:"input-nilai",    icon:"📝", label:"Input Nilai" },
     { id:"input-absensi",  icon:"✅", label:"Input Absensi" },
     { id:"modul-tutor",    icon:"📚", label:"Modul Belajar" },
+    { id:"gaji-kinerja-tutor", icon:"💰", label:"Gaji & Kinerja Saya" },
   ],
   admin: [
     { id:"beranda-peserta", icon:"📊", label:"Ringkasan (Admin)" },
@@ -1232,6 +1266,7 @@ async function lazyLoadPage(pageId) {
     if (pageId === "input-nilai")     renderInputNilaiForm();
     if (pageId === "input-absensi")   { renderInputAbsensiForm(); loadRiwayatAbsensiTutor(); }
     if (pageId === "modul-tutor")     await loadModulTutor();
+    if (pageId === "gaji-kinerja-tutor") await loadGajiKinerjaSaya();
   }
 }
 
@@ -1357,6 +1392,97 @@ function renderBerandaTutor(data) {
       </div>`;
     }).join("");
   }
+}
+
+// ═══════════════════════════════════════════
+//  GAJI & KINERJA SAYA (TUTOR) — self-service
+//  Menghubungkan action backend "getPayrollSaya" & "getKinerjaSaya"
+//  yang sebelumnya sudah ada di Code.gs tapi belum dipanggil dari sini.
+// ═══════════════════════════════════════════
+
+// normPeriode/formatPeriode: backend bisa mengembalikan "Periode" sebagai
+// string ISO datetime penuh ("2026-09-01T00:00:00.000Z") kalau kolom itu
+// tersimpan sebagai Date object di sheet Payroll/Penilaian_Tutor, atau
+// sebagai string "2026-09" kalau sudah teks murni. Helper ini menormalkan
+// supaya selalu tampil rapi terlepas dari bentuk aslinya.
+function normPeriode(s) { return String(s || "").slice(0, 7); }
+function formatPeriode(s) {
+  const p = normPeriode(s);
+  if (!p) return "—";
+  const parts = p.split("-");
+  const bulanNama = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  const idx = parseInt(parts[1], 10) - 1;
+  return (bulanNama[idx] || parts[1]) + " " + parts[0];
+}
+
+async function loadGajiKinerjaSaya() {
+  const periodeInput = document.getElementById("gk-periode");
+  if (!periodeInput.value) {
+    const d = new Date();
+    periodeInput.value = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+  }
+  const periode = periodeInput.value;
+  document.getElementById("gk-periode-label").textContent = "Periode " + formatPeriode(periode);
+
+  document.getElementById("stat-kinerja-saya").innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div>Memuat kinerja...</div>`;
+  document.getElementById("riwayat-penilaian-saya").innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div>Memuat...</div>`;
+  document.getElementById("riwayat-payroll-saya").innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div>Memuat...</div>`;
+
+  try {
+    const [kinerjaRes, payrollRes] = await Promise.all([
+      apiPost("getKinerjaSaya", { periode }),
+      apiPost("getPayrollSaya")
+    ]);
+
+    if (kinerjaRes.ok) renderKinerjaSaya(kinerjaRes.data);
+    else { toast("Gagal memuat kinerja: " + kinerjaRes.error, "error"); document.getElementById("stat-kinerja-saya").innerHTML = ""; }
+
+    if (payrollRes.ok) renderPayrollSaya(payrollRes.data || []);
+    else toast("Gagal memuat riwayat gaji: " + payrollRes.error, "error");
+  } catch(e) {
+    toast("Error: " + e.message, "error");
+  }
+}
+
+function renderKinerjaSaya(d) {
+  document.getElementById("stat-kinerja-saya").innerHTML = `
+    <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-num">${d.totalSesi}</div><div class="stat-label">Total Sesi Bulan Ini</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-num">${d.tingkatKehadiran}%</div><div class="stat-label">Sesi Terverifikasi</div></div>
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-num" style="font-size:15px;">${formatRp(d.totalHonor)}</div><div class="stat-label">Honor Bulan Ini</div></div>
+    <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-num">${d.rataNilaiPeserta ?? "—"}</div><div class="stat-label">Rata-rata Nilai Peserta</div></div>
+  `;
+
+  const pEl = document.getElementById("riwayat-penilaian-saya");
+  const riwayat = d.riwayatPenilaian || [];
+  if (!riwayat.length) {
+    pEl.innerHTML = `<div class="empty-state"><div class="es-icon">⭐</div>Belum ada penilaian dari admin.</div>`;
+  } else {
+    pEl.innerHTML = `<table class="tbl">
+      <thead><tr><th>Periode</th><th>Skor Rata-rata</th><th>Catatan</th><th>Tgl Dinilai</th></tr></thead>
+      <tbody>${riwayat.map(r => `<tr>
+        <td>${formatPeriode(r["Periode"])}</td>
+        <td><span class="badge badge-gold">${r["Skor Rata-rata"]}</span></td>
+        <td style="font-size:12px;color:rgba(255,255,255,.6);">${r["Catatan"]||"—"}</td>
+        <td>${formatTgl(r["Tgl Dinilai"])}</td>
+      </tr>`).join("")}</tbody></table>`;
+  }
+}
+
+function renderPayrollSaya(rows) {
+  const el = document.getElementById("riwayat-payroll-saya");
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">💰</div>Belum ada slip gaji. Slip akan muncul setelah admin men-generate payroll bulanan.</div>`;
+    return;
+  }
+  el.innerHTML = `<table class="tbl">
+    <thead><tr><th>Periode</th><th>Jumlah Sesi</th><th>Total Gaji</th><th>Status</th><th>Tgl Dibayar</th></tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td>${formatPeriode(r["Periode"])}</td>
+      <td>${r["Jumlah Sesi"]||"—"}</td>
+      <td><strong>${formatRp(r["Total Gaji (Rp)"])}</strong></td>
+      <td>${badgeStatus(r["Status"])}</td>
+      <td>${formatTgl(r["Tgl Dibayar"])}</td>
+    </tr>`).join("")}</tbody></table>`;
 }
 
 // ═══════════════════════════════════════════
