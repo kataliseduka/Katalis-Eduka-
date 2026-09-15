@@ -191,6 +191,10 @@ body {
 .pk-meta-row:last-of-type { border-bottom: none; }
 .pk-meta-row strong { color: var(--gold-2); font-weight: 700; }
 .pk-note { margin-top: 12px; font-size: 10.5px; color: rgba(255,255,255,.3); line-height: 1.5; }
+.pk-harga-row { display: flex; align-items: baseline; gap: 8px; padding: 10px 0 6px; flex-wrap: wrap; }
+.pk-harga-final { font-size: 20px; font-weight: 800; color: var(--gold); }
+.pk-harga-reguler { font-size: 12px; color: rgba(255,255,255,.35); text-decoration: line-through; }
+.pk-mode-badge { display: inline-block; font-size: 9.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: rgba(255,255,255,.06); color: rgba(255,255,255,.5); border: 1px solid rgba(255,255,255,.1); margin-bottom: 4px; }
 
 /* ═══ CARA DAFTAR ═══ */
 .daftar-section { background: var(--navy-2); }
@@ -381,6 +385,7 @@ footer { background: #060e1a; border-top: 1px solid rgba(201,168,76,.1); padding
     <li><a href="#daftar">Cara Daftar</a></li>
     <li><a href="#berita">Berita</a></li>
     <li><a href="#info">Kontak</a></li>
+    <li><a href="toko.html">Toko Materi</a></li>
   </ul>
   <div class="nav-cta">
     <a href="#daftar" class="btn-outline-sm">Daftar Tutor</a>
@@ -540,8 +545,11 @@ footer { background: #060e1a; border-top: 1px solid rgba(201,168,76,.1); padding
       <div>
         <div class="sec-kicker">Paket Belajar</div>
         <h2 class="sec-title">Pilih <em>Paket</em> Sesuai Kebutuhan</h2>
-        <p class="sec-desc">Hemat lebih banyak dengan paket bulanan, atau bayar per sesi sesuai kehadiran. Semua paket bisa disesuaikan saat pendaftaran.</p>
+        <p class="sec-desc">Harga tetap dan sudah pasti — dibayar di awal bulan, selalu lebih hemat per sesi dibanding bayar satuan. Sesi di luar jatah paket tetap bisa ditambah, dihitung terpisah sesuai tarif satuan.</p>
       </div>
+    </div>
+    <div class="paket-tabs" id="paket-tabs">
+      <p style="color:rgba(255,255,255,.3);font-size:12px;padding:8px 0">Memuat kategori paket…</p>
     </div>
     <div class="paket-grid" id="paket-grid">
       <p style="color:rgba(255,255,255,.3);font-size:12px;grid-column:1/-1;text-align:center;padding:24px 0">Memuat daftar paket…</p>
@@ -612,9 +620,9 @@ footer { background: #060e1a; border-top: 1px solid rgba(201,168,76,.1); padding
         <div class="promo-banner gold">📦<span class="promo-badge">Hemat</span></div>
         <div class="promo-body">
           <div class="promo-tag">Paket Bundling</div>
-          <div class="promo-title">Paket Reguler &amp; Intensif — Segera Hadir</div>
-          <div class="promo-desc">Paket bundling dengan harga lebih hemat per sesi: Paket Reguler (8 sesi), Paket Intensif (16 sesi), Paket Olimpiade, dan Paket Skripsi Express.</div>
-          <a href="https://wa.me/6285154066396?text=Halo%20Admin%20K-Edu%2C%20saya%20ingin%20tahu%20info%20lengkap%20paket%20bundling." target="_blank" rel="noopener" class="promo-cta">Info Lengkap →</a>
+          <div class="promo-title">Paket Belajar Bulanan — Harga Tetap, Lebih Hemat</div>
+          <div class="promo-desc">Pilih paket Hemat, Reguler, atau Intensif sesuai jenjang — dibayar di awal bulan dengan harga sudah pasti, selalu lebih murah per sesi dibanding bayar satuan.</div>
+          <a href="#layanan" class="promo-cta">Lihat Semua Paket →</a>
         </div>
       </div>
       <div class="promo-card fade-up" style="transition-delay:.2s">
@@ -624,6 +632,15 @@ footer { background: #060e1a; border-top: 1px solid rgba(201,168,76,.1); padding
           <div class="promo-title">Bergabung jadi Tutor Katalis Eduka</div>
           <div class="promo-desc">Tambah penghasilan dengan mengajar fleksibel. Komisi proporsional, dashboard transparan, dan jadwal bisa disesuaikan dengan kesibukanmu.</div>
           <a href="#daftar" class="promo-cta">Daftar Tutor →</a>
+        </div>
+      </div>
+      <div class="promo-card fade-up" style="transition-delay:.3s">
+        <div class="promo-banner blue">🛒<span class="promo-badge">Baru!</span></div>
+        <div class="promo-body">
+          <div class="promo-tag">Toko Materi</div>
+          <div class="promo-title">Beli Worksheet &amp; Modul Tanpa Harus Ikut Bimbel</div>
+          <div class="promo-desc">Lembar kerja dan modul yang dipakai tutor Katalis Eduka, sekarang bisa dibeli siapa saja. Lihat halaman pratinjaunya dulu sebelum membeli.</div>
+          <a href="toko.html" class="promo-cta">Lihat Toko →</a>
         </div>
       </div>
     </div>
@@ -986,21 +1003,27 @@ function renderTarif(list) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  RENDER PAKET (sheet Paket)
+//  RENDER PAKET (sheet Paket) — dengan tab kategori,
+//  harga coret (Harga Reguler vs Final), dan badge Mode Tagihan
 // ═══════════════════════════════════════════════════════
-function renderPaket(list) {
+let paketDataCache = [];
+
+function renderPaketCards(kategori) {
   const grid = document.getElementById("paket-grid");
   if (!grid) return;
-  if (!list || list.length === 0) {
-    grid.innerHTML = `<p style="color:rgba(255,255,255,.3);font-size:12px;grid-column:1/-1;text-align:center;padding:24px 0">Belum ada paket yang ditampilkan.</p>`;
+  const list = paketDataCache.filter(p => (p.kategori || "Lainnya") === kategori);
+  if (list.length === 0) {
+    grid.innerHTML = `<p style="color:rgba(255,255,255,.3);font-size:12px;grid-column:1/-1;text-align:center;padding:24px 0">Belum ada paket untuk kategori ini.</p>`;
     return;
   }
   grid.innerHTML = list.map((p, i) => {
     const delay      = i > 0 ? `style="transition-delay:${i * 0.1}s"` : "";
     const diskonPill = Number(p.diskon) > 0 ? `<div class="pk-diskon">Hemat ${p.diskon}%</div>` : "";
-    const hargaTxt   = String(p.harga || "").toLowerCase().includes("gratis") || Number(p.harga) === 0
-      ? "Gratis"
-      : (isNaN(Number(p.harga)) ? p.harga : fmtRupiah(p.harga));
+    const isGratis   = Number(p.harga) === 0;
+    const hargaFinalTxt = isGratis ? "Gratis" : (isNaN(Number(p.harga)) ? p.harga : fmtRupiah(p.harga));
+    const hargaReguler  = Number(p.hargaReguler) || 0;
+    const showCoret     = !isGratis && hargaReguler > Number(p.harga);
+    const modeBadge  = p.modeTagihan ? `<span class="pk-mode-badge">${p.modeTagihan}</span>` : "";
     return `
       <div class="paket-card fade-up" ${delay}>
         <div class="pk-head">
@@ -1010,14 +1033,51 @@ function renderPaket(list) {
         </div>
         <div class="pk-body">
           <div class="pk-desc">${p.deskripsi || ""}</div>
+          <div class="pk-harga-row">
+            <span class="pk-harga-final">${hargaFinalTxt}</span>
+            ${showCoret ? `<span class="pk-harga-reguler">${fmtRupiah(hargaReguler)}</span>` : ""}
+          </div>
+          ${modeBadge}
           <div class="pk-meta-row"><span>Sesi/Bulan</span><strong>${p.jumlahSesi || "—"}</strong></div>
           <div class="pk-meta-row"><span>Durasi</span><strong>${p.durasi ? p.durasi + " mnt" : "—"}</strong></div>
-          <div class="pk-meta-row"><span>Harga</span><strong>${hargaTxt}</strong></div>
           ${p.keterangan ? `<div class="pk-note">${p.keterangan}</div>` : ""}
         </div>
       </div>`;
   }).join("");
   grid.querySelectorAll(".fade-up").forEach(el => observer.observe(el));
+}
+
+function switchPaketTab(kategori, btn) {
+  document.querySelectorAll(".paket-tab").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  renderPaketCards(kategori);
+}
+
+function renderPaket(list) {
+  const tabsEl = document.getElementById("paket-tabs");
+  const grid   = document.getElementById("paket-grid");
+  if (!tabsEl || !grid) return;
+  paketDataCache = list || [];
+  if (paketDataCache.length === 0) {
+    tabsEl.innerHTML = "";
+    grid.innerHTML = `<p style="color:rgba(255,255,255,.3);font-size:12px;grid-column:1/-1;text-align:center;padding:24px 0">Belum ada paket yang ditampilkan.</p>`;
+    return;
+  }
+  // Urutan kategori biar enak dibaca: akademik per jenjang dulu, lalu program
+  // khusus, promo di paling akhir.
+  const urutanKategori = [
+    "Akademik PAUD/TK", "Akademik SD", "Akademik SMP", "Akademik SMA", "Akademik Mahasiswa",
+    "Keagamaan", "Bahasa Asing", "Olimpiade", "Riset Lanjutan", "Promo"
+  ];
+  const kategoriUnik = [...new Set(paketDataCache.map(p => p.kategori || "Lainnya"))]
+    .sort((a, b) => {
+      const ia = urutanKategori.indexOf(a), ib = urutanKategori.indexOf(b);
+      return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
+    });
+  tabsEl.innerHTML = kategoriUnik.map((k, i) =>
+    `<button class="tarif-tab paket-tab ${i === 0 ? "active" : ""}" onclick="switchPaketTab('${k.replace(/'/g, "\\'")}', this)">${k}</button>`
+  ).join("");
+  renderPaketCards(kategoriUnik[0]);
 }
 
 // ═══════════════════════════════════════════════════════
