@@ -358,6 +358,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <button class="sb-item" onclick="showPage('modul')" data-page="modul">
         <span class="sb-icon">📚</span> Modul Belajar
       </button>
+      <button class="sb-item" onclick="showPage('worksheet')" data-page="worksheet">
+        <span class="sb-icon">📝</span> Worksheet
+      </button>
+      <button class="sb-item" onclick="showPage('pesanan-materi')" data-page="pesanan-materi">
+        <span class="sb-icon">🛒</span> Pesanan Materi
+        <span class="sb-badge" id="badge-pesanan-pending" style="display:none">0</span>
+      </button>
+      <button class="sb-item" onclick="showPage('log-cetak')" data-page="log-cetak">
+        <span class="sb-icon">🖨️</span> Log Cetak
+      </button>
 
       <div class="sb-section">HRIS</div>
       <button class="sb-item" onclick="showPage('verifikasi')" data-page="verifikasi">
@@ -655,6 +665,98 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       </div>
     </div>
 
+    <!-- ═══ PAGE: WORKSHEET ═══ -->
+    <div class="page" id="page-worksheet">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="page-title">Worksheet</div>
+          <div class="page-desc">Lembar kerja PDF. Bisa dipratinjau &amp; dicetak dari dashboard, tidak bisa diunduh. Atur di sini worksheet mana yang gratis untuk tutor dan mana yang berbayar, beserta harganya.</div>
+        </div>
+        <button class="btn btn-gold" onclick="openWorksheetModal()">+ Upload Worksheet</button>
+      </div>
+      <div class="section-card">
+        <div class="tbl-controls">
+          <input class="search-input" id="search-ws" placeholder="🔍 Cari judul / mapel..." oninput="filterWorksheet()">
+          <select class="filter-select" id="filter-ws-jenjang" onchange="onFilterWsJenjangChange()">
+            <option value="">Semua Jenjang</option>
+            <option>SD</option><option>SMP</option><option>SMA</option><option>Mahasiswa</option><option>Umum</option>
+          </select>
+          <select class="filter-select" id="filter-ws-mapel" onchange="filterWorksheet()">
+            <option value="">Semua Mapel</option>
+          </select>
+          <select class="filter-select" id="filter-ws-akses" onchange="filterWorksheet()">
+            <option value="">Semua Akses Tutor</option>
+            <option>Gratis</option><option>Berbayar</option>
+          </select>
+          <select class="filter-select" id="filter-ws-status" onchange="filterWorksheet()">
+            <option value="">Semua Status</option>
+            <option>Aktif</option><option>Nonaktif</option>
+          </select>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>Judul</th><th>Jenjang</th><th>Mapel</th><th>Hal.</th>
+              <th>Akses Tutor</th><th>Toko Publik</th><th>Dilihat / Cetak</th><th>Status</th><th>Aksi</th>
+            </tr></thead>
+            <tbody id="tbody-ws"><tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PAGE: PESANAN MATERI ═══ -->
+    <div class="page" id="page-pesanan-materi">
+      <div class="page-header">
+        <div class="page-title">Pesanan Materi</div>
+        <div class="page-desc">Pembelian worksheet &amp; modul dari pengunjung website maupun tutor. Konfirmasi pesanan untuk menerbitkan kode akses (dikirim otomatis via WhatsApp).</div>
+      </div>
+      <div class="section-card">
+        <div class="tbl-controls">
+          <input class="search-input" id="search-pesanan" placeholder="🔍 Cari kode / nama / judul..." oninput="filterPesananMateri()">
+          <select class="filter-select" id="filter-pesanan-status" onchange="filterPesananMateri()">
+            <option value="">Semua Status</option>
+            <option>Menunggu Pembayaran</option>
+            <option>Menunggu Verifikasi</option>
+            <option>Lunas</option>
+            <option>Batal</option>
+          </select>
+          <button class="btn btn-outline" onclick="openBeriAksesModal()">＋ Beri Akses Manual</button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>Kode</th><th>Tanggal</th><th>Item</th><th>Pembeli</th>
+              <th>Harga</th><th>Bukti</th><th>Status</th><th>Kode Akses</th><th>Aksi</th>
+            </tr></thead>
+            <tbody id="tbody-pesanan"><tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PAGE: LOG CETAK ═══ -->
+    <div class="page" id="page-log-cetak">
+      <div class="page-header">
+        <div class="page-title">Log Cetak</div>
+        <div class="page-desc">Setiap perintah cetak tercatat lengkap dengan kode unik yang ikut tercetak sebagai watermark di lembarannya. Kalau ada file beredar tanpa izin, kode ini menunjukkan siapa yang mencetaknya.</div>
+      </div>
+      <div class="section-card">
+        <div class="tbl-controls">
+          <input class="search-input" id="search-logcetak" placeholder="🔍 Cari kode / nama / judul..." oninput="filterLogCetak()">
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>Kode Cetak</th><th>Waktu</th><th>Nama</th><th>Role</th>
+              <th>Item</th><th>Hal.</th><th>Keterangan</th>
+            </tr></thead>
+            <tbody id="tbody-logcetak"><tr><td colspan="7" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ PAGE: VERIFIKASI SESI ═══ -->
     <div class="page" id="page-verifikasi">
       <div class="page-header">
@@ -890,16 +992,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     <div class="form-grid">
       <div class="form-row">
         <label class="form-label">Paket / Keterangan *</label>
-        <select class="form-select" id="tf-paket">
-          <option>Paket Bulanan Regular</option>
-          <option>Paket Bulanan Intensif</option>
-          <option>Paket Olimpiade Bulanan</option>
-          <option>Paket Skripsi/Tesis Bulanan</option>
-          <option>Paket Tahfidz Bulanan</option>
-          <option>Per Sesi</option>
-          <option>Biaya Administrasi</option>
-          <option>Lainnya</option>
+        <select class="form-select" id="tf-paket" onchange="onPaketDropdownChange()">
+          <option value="">— Custom / Isi Manual —</option>
         </select>
+        <input class="form-input" id="tf-paket-custom" placeholder="Keterangan (mis. Sesi Per Kali, Biaya Administrasi)" style="margin-top:8px;">
       </div>
       <div class="form-row">
         <label class="form-label">Mode Tagihan</label>
@@ -914,6 +1010,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <div class="form-row">
         <label class="form-label">Jumlah (Rp) *</label>
         <input class="form-input" id="tf-jumlah" type="number" placeholder="150000">
+        <div id="tf-jumlah-hint" style="font-size:11px;color:rgba(255,255,255,.4);margin-top:4px;"></div>
       </div>
       <div class="form-row">
         <label class="form-label">Jatuh Tempo</label>
@@ -1060,6 +1157,203 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-modul')">Batal</button>
       <button class="btn btn-gold" id="mf-submit-btn" onclick="doSimpanModul()">📚 Simpan Modul</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Upload / Edit Worksheet -->
+<div class="modal-backdrop" id="modal-ws">
+  <div class="modal" style="max-width:720px;">
+    <button class="modal-close" onclick="closeModal('modal-ws')">✕</button>
+    <div class="modal-title" id="wf-title">Upload Worksheet</div>
+    <div class="modal-desc">PDF disimpan privat di Drive. Thumbnail &amp; halaman pratinjau dibuat otomatis dari halaman pertama saat file dipilih.</div>
+    <div class="modal-alert" id="ws-alert"></div>
+    <input type="hidden" id="wf-id">
+    <input type="hidden" id="wf-halaman">
+
+    <div class="form-row">
+      <label class="form-label">Judul Worksheet *</label>
+      <input class="form-input" id="wf-judul" placeholder="Contoh: Latihan Soal Pecahan — Paket A">
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">Jenjang *</label>
+        <select class="form-select" id="wf-jenjang" onchange="onWfJenjangChange()">
+          <option value="SD">SD</option><option value="SMP">SMP</option><option value="SMA">SMA</option>
+          <option value="Mahasiswa">Mahasiswa</option><option value="Umum">Umum</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Mata Pelajaran *</label>
+        <select class="form-select" id="wf-mapel"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Deskripsi</label>
+      <input class="form-input" id="wf-deskripsi" placeholder="Opsional — ringkasan isi worksheet">
+    </div>
+    <div class="form-row" id="wf-file-row">
+      <label class="form-label">File PDF * <span style="font-weight:400;color:rgba(255,255,255,.4);">(maks ±15MB)</span></label>
+      <input class="form-input" id="wf-file" type="file" accept="application/pdf" onchange="onWfFilePilih()">
+      <div id="wf-file-info" style="font-size:11px;color:rgba(255,255,255,.4);margin-top:6px;"></div>
+      <div id="wf-thumb-prev" style="margin-top:10px;display:none;">
+        <img id="wf-thumb-img" style="max-height:150px;border-radius:8px;border:1px solid rgba(201,168,76,.25);">
+      </div>
+    </div>
+
+    <div style="border-top:1px solid rgba(201,168,76,.15);margin:18px 0 14px;padding-top:14px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Akses Tutor</div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Status Akses Tutor</label>
+          <select class="form-select" id="wf-akses-tutor" onchange="toggleHargaTutor()">
+            <option value="Gratis">Gratis — semua tutor bisa lihat &amp; cetak</option>
+            <option value="Berbayar">Berbayar — tutor harus beli dulu</option>
+          </select>
+        </div>
+        <div class="form-row" id="wf-harga-tutor-row" style="display:none;">
+          <label class="form-label">Harga untuk Tutor (Rp)</label>
+          <input class="form-input" id="wf-harga-tutor" type="number" min="0" step="1000" value="0">
+        </div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid rgba(201,168,76,.15);margin:0 0 14px;padding-top:14px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Akses Peserta</div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Status Akses Peserta</label>
+          <select class="form-select" id="wf-akses-peserta" onchange="toggleHargaPeserta()">
+            <option value="Gratis">Gratis — sesuai jenjang &amp; mapel yang diikuti</option>
+            <option value="Berbayar">Berbayar</option>
+          </select>
+        </div>
+        <div class="form-row" id="wf-harga-peserta-row" style="display:none;">
+          <label class="form-label">Harga untuk Peserta (Rp)</label>
+          <input class="form-input" id="wf-harga-peserta" type="number" min="0" step="1000" value="0">
+        </div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid rgba(201,168,76,.15);margin:0 0 14px;padding-top:14px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Toko Publik</div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Dijual di website?</label>
+          <select class="form-select" id="wf-dijual" onchange="toggleHargaPublik()">
+            <option value="Tidak">Tidak</option>
+            <option value="Ya">Ya — tampil di halaman toko</option>
+          </select>
+        </div>
+        <div class="form-row" id="wf-harga-publik-row" style="display:none;">
+          <label class="form-label">Harga Publik (Rp)</label>
+          <input class="form-input" id="wf-harga-publik" type="number" min="0" step="1000" value="0">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Halaman Pratinjau <span style="font-weight:400;color:rgba(255,255,255,.4);">(dilihat gratis di toko)</span></label>
+          <input class="form-input" id="wf-hal-preview" type="number" min="1" max="5" value="1">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Batas Cetak per User <span style="font-weight:400;color:rgba(255,255,255,.4);">(0 = tanpa batas)</span></label>
+          <input class="form-input" id="wf-batas-cetak" type="number" min="0" value="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Status</label>
+      <select class="form-select" id="wf-status">
+        <option value="Aktif">Aktif (tampil)</option>
+        <option value="Nonaktif">Nonaktif (disembunyikan)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-ws')">Batal</button>
+      <button class="btn btn-gold" id="wf-submit-btn" onclick="doSimpanWorksheet()">📝 Simpan Worksheet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Pratinjau Worksheet -->
+<div class="modal-backdrop" id="modal-ws-view">
+  <div class="modal" style="max-width:860px;">
+    <button class="modal-close" onclick="closeModal('modal-ws-view')">✕</button>
+    <div class="modal-title" id="wv-title">Pratinjau Worksheet</div>
+    <div class="modal-desc">Mode tampilan saja — tidak untuk diunduh.</div>
+    <div id="wv-body" style="max-height:70vh;overflow-y:auto;background:rgba(0,0,0,.25);border-radius:10px;padding:10px;text-align:center;" oncontextmenu="return false;"></div>
+  </div>
+</div>
+
+<!-- Modal: Pengaturan Toko untuk Modul -->
+<div class="modal-backdrop" id="modal-modul-toko">
+  <div class="modal" style="max-width:600px;">
+    <button class="modal-close" onclick="closeModal('modal-modul-toko')">✕</button>
+    <div class="modal-title">Jual Modul di Website</div>
+    <div class="modal-desc">Aktifkan agar modul ini muncul di halaman toko untuk pengunjung non-peserta. Pilih ulang file PDF-nya supaya thumbnail &amp; pratinjau dibuat otomatis.</div>
+    <div class="modal-alert" id="mt-alert"></div>
+    <input type="hidden" id="mt-id">
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">Dijual di website?</label>
+        <select class="form-select" id="mt-dijual">
+          <option value="Tidak">Tidak</option>
+          <option value="Ya">Ya</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Harga Publik (Rp)</label>
+        <input class="form-input" id="mt-harga" type="number" min="0" step="1000" value="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Halaman Pratinjau</label>
+      <input class="form-input" id="mt-hal-preview" type="number" min="1" max="5" value="1">
+    </div>
+    <div class="form-row">
+      <label class="form-label">File PDF Modul <span style="font-weight:400;color:rgba(255,255,255,.4);">(untuk membuat thumbnail — pilih file yang sama)</span></label>
+      <input class="form-input" id="mt-file" type="file" accept="application/pdf" onchange="onMtFilePilih()">
+      <div id="mt-file-info" style="font-size:11px;color:rgba(255,255,255,.4);margin-top:6px;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-modul-toko')">Batal</button>
+      <button class="btn btn-gold" id="mt-submit-btn" onclick="doSimpanModulToko()">🛒 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Beri Akses Manual -->
+<div class="modal-backdrop" id="modal-beri-akses">
+  <div class="modal" style="max-width:560px;">
+    <button class="modal-close" onclick="closeModal('modal-beri-akses')">✕</button>
+    <div class="modal-title">Beri Akses Materi Manual</div>
+    <div class="modal-desc">Untuk tutor/peserta yang membayar di luar sistem, atau sebagai bonus. Akses langsung terbuka di dashboard mereka.</div>
+    <div class="modal-alert" id="ba-alert"></div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">Jenis Materi</label>
+        <select class="form-select" id="ba-jenis" onchange="onBaJenisChange()">
+          <option value="Worksheet">Worksheet</option>
+          <option value="Modul">Modul</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Materi</label>
+        <select class="form-select" id="ba-item"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">ID User <span style="font-weight:400;color:rgba(255,255,255,.4);">(mis. TUT-001 / PES-0012)</span></label>
+      <input class="form-input" id="ba-user" placeholder="TUT-001">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Catatan</label>
+      <input class="form-input" id="ba-catatan" placeholder="Opsional — mis. bayar tunai 12 Sep">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-beri-akses')">Batal</button>
+      <button class="btn btn-gold" id="ba-submit-btn" onclick="doBeriAkses()">✅ Beri Akses</button>
     </div>
   </div>
 </div>
@@ -1211,7 +1505,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbz-lM8m9k7B88sjcCbdVfQW
 
 // ── STATE ──
 let state = { token: null, nama: null, id: null, jabatan: null, rekening: [] };
-let cache = { peserta: [], tutor: [], tagihan: [], jadwal: [], modul: [], absensi: [], payroll: [] };
+let cache = { peserta: [], tutor: [], tagihan: [], jadwal: [], modul: [], absensi: [], payroll: [], worksheet: [], pesanan: [], logcetak: [] };
 let currentPage = "dashboard";
 let bcTarget = "semua";
 
@@ -1220,6 +1514,7 @@ window.addEventListener("DOMContentLoaded", () => {
   updateClock();
   setInterval(updateClock, 1000);
   loadTarifData();
+  loadPaketData();
   const saved = sessionStorage.getItem("k_admin_token");
   if (saved) {
     state.token   = saved;
@@ -1280,6 +1575,80 @@ function getMapelOptions(jenjang) {
   const set = new Set();
   groups.forEach(g => g.layanan.forEach(l => set.add(l.layanan)));
   return [...set].sort();
+}
+
+// ── DATA PAKET (dari sheet Paket via endpoint publik getPublicPaket) ──
+// Dipakai supaya dropdown "Paket" di form Tambah Tagihan ambil harga ASLI
+// dari sheet Paket (skema harga tetap), bukan diketik manual per transaksi —
+// jadi harga yang dibayar peserta selalu konsisten dengan tabel harga resmi.
+let paketCache = null;
+async function loadPaketData() {
+  if (paketCache) return paketCache;
+  try {
+    const res = await apiGet("getPublicPaket");
+    paketCache = res.ok ? res.data : [];
+  } catch (e) {
+    paketCache = [];
+  }
+  return paketCache;
+}
+
+// Isi ulang dropdown #tf-paket dari data Paket asli, dikelompokkan per Kategori.
+// Opsi pertama "— Custom / Isi Manual —" tetap disediakan untuk kasus di luar
+// paket resmi (mis. tagihan per sesi lepas, biaya administrasi).
+function populatePaketDropdown() {
+  const sel = document.getElementById("tf-paket");
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Custom / Isi Manual —</option>';
+  const groups = {};
+  (paketCache || []).forEach(p => {
+    const kat = p.kategori || "Lainnya";
+    if (!groups[kat]) groups[kat] = [];
+    groups[kat].push(p);
+  });
+  Object.keys(groups).forEach(kategori => {
+    const og = document.createElement("optgroup");
+    og.label = kategori;
+    groups[kategori].forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.dataset.nama  = p.nama;
+      opt.dataset.harga = p.harga;
+      opt.dataset.mode  = p.modeTagihan || "";
+      opt.textContent = `${p.nama} — ${formatRp(p.harga)} (${p.jumlahSesi}x/bulan)`;
+      og.appendChild(opt);
+    });
+    sel.appendChild(og);
+  });
+}
+
+// Begitu admin pilih Paket resmi: harga & Mode Tagihan otomatis TERKUNCI
+// sesuai sheet Paket (input jadi read-only, dropdown mode di-disable) —
+// supaya harga tidak bisa "digeser" manual per transaksi. Pilih kembali
+// "— Custom / Isi Manual —" untuk kembali ke mode isi bebas.
+function onPaketDropdownChange() {
+  const sel   = document.getElementById("tf-paket");
+  const opt   = sel.selectedOptions[0];
+  const jml   = document.getElementById("tf-jumlah");
+  const mode  = document.getElementById("tf-mode-tagihan");
+  const custom = document.getElementById("tf-paket-custom");
+  const hint   = document.getElementById("tf-jumlah-hint");
+  if (opt && opt.value) {
+    jml.value = opt.dataset.harga;
+    jml.readOnly = true;
+    jml.style.opacity = "0.6";
+    if (opt.dataset.mode) mode.value = opt.dataset.mode;
+    mode.disabled = true;
+    if (custom) custom.style.display = "none";
+    if (hint) hint.textContent = "🔒 Terkunci sesuai harga resmi paket \"" + opt.dataset.nama + "\"";
+  } else {
+    jml.value = "";
+    jml.readOnly = false;
+    jml.style.opacity = "1";
+    mode.disabled = false;
+    if (custom) custom.style.display = "block";
+    if (hint) hint.textContent = "";
+  }
 }
 
 // ── LOADING ──
@@ -1376,7 +1745,7 @@ function showApp() {
 function doLogout() {
   sessionStorage.clear();
   state = { token:null, nama:null, id:null, jabatan:null };
-  cache = { peserta:[], tutor:[], tagihan:[], jadwal:[], modul:[], absensi:[], payroll:[] };
+  cache = { peserta:[], tutor:[], tagihan:[], jadwal:[], modul:[], absensi:[], payroll:[], worksheet:[], pesanan:[], logcetak:[] };
   document.getElementById("login-screen").style.display = "";
   document.getElementById("app").classList.remove("show");
   document.getElementById("lg-pin").value = "";
@@ -1397,6 +1766,9 @@ function showPage(page) {
   else if (page === "laporan") loadLaporan();
   else if (page === "notiflog") loadNotifLog();
   else if (page === "modul") loadModul();
+  else if (page === "worksheet") loadWorksheet();
+  else if (page === "pesanan-materi") loadPesananMateri();
+  else if (page === "log-cetak") loadLogCetak();
   else if (page === "verifikasi") loadVerifikasi();
   else if (page === "payroll") loadPayrollPage();
   else if (page === "kinerja-tutor") loadKinerjaTutor();
@@ -1795,9 +2167,16 @@ async function doKonfirmasiBayar() {
 }
 
 // ── TAMBAH TAGIHAN ──
-function openTambahTagihanModal() {
-  ["tf-id-peserta","tf-nama-peserta","tf-id-tutor","tf-nama-tutor","tf-jumlah"].forEach(id => document.getElementById(id).value = "");
+async function openTambahTagihanModal() {
+  ["tf-id-peserta","tf-nama-peserta","tf-id-tutor","tf-nama-tutor","tf-jumlah","tf-paket-custom"].forEach(id => document.getElementById(id).value = "");
+  await loadPaketData();
+  populatePaketDropdown();
   document.getElementById("tf-paket").selectedIndex = 0;
+  document.getElementById("tf-jumlah").readOnly = false;
+  document.getElementById("tf-jumlah").style.opacity = "1";
+  document.getElementById("tf-jumlah-hint").textContent = "";
+  document.getElementById("tf-paket-custom").style.display = "block";
+  document.getElementById("tf-mode-tagihan").disabled = false;
   document.getElementById("tf-mode-tagihan").selectedIndex = 0;
   document.getElementById("tf-jatuh-tempo").value = "";
   // Update rekening info dari state jika tersedia
@@ -1820,6 +2199,14 @@ async function doTambahTagihan() {
   const idPeserta   = document.getElementById("tf-id-peserta").value.trim();
   const jumlah      = document.getElementById("tf-jumlah").value.trim();
   if (!idPeserta || !jumlah) { showAlert("tagihan-alert","ID Peserta dan Jumlah wajib diisi.","error"); return; }
+  const paketSel = document.getElementById("tf-paket");
+  const paketOpt = paketSel.selectedOptions[0];
+  const idPaket  = (paketOpt && paketOpt.value) ? paketOpt.value : "";
+  // Kalau paket resmi dipilih, nama diambil dari data sheet Paket (terkunci).
+  // Kalau custom, nama diambil dari field keterangan manual.
+  const namaPaket = idPaket
+    ? paketOpt.dataset.nama
+    : (document.getElementById("tf-paket-custom").value.trim() || "Sesi Per Kali");
   showLoading("Membuat tagihan...");
   try {
     const res = await apiPost("tambahTagihan", {
@@ -1827,7 +2214,8 @@ async function doTambahTagihan() {
       namaPeserta:  document.getElementById("tf-nama-peserta").value.trim(),
       idTutor:      document.getElementById("tf-id-tutor").value.trim(),
       namaTutor:    document.getElementById("tf-nama-tutor").value.trim(),
-      paket:        document.getElementById("tf-paket").value,
+      idPaket,
+      paket:        namaPaket,
       modeTagihan:  document.getElementById("tf-mode-tagihan").value,
       jumlah:       parseFloat(jumlah),
       jatuhTempo:   document.getElementById("tf-jatuh-tempo").value
@@ -2531,6 +2919,7 @@ function renderModulTable(rows) {
       <td>
         <button class="btn-sm-outline" onclick="previewModulAdmin('${r["ID Modul"]}','${(r["Judul"]||"").replace(/'/g,"\\'")}')">👁️ Lihat</button>
         <button class="btn-sm-outline" onclick='openModulModal(${JSON.stringify(r).replace(/'/g,"&apos;")})'>✏️ Edit</button>
+        <button class="btn-sm-outline" onclick='openModulTokoModal(${JSON.stringify(r).replace(/'/g,"&apos;")})'>🛒 Jual</button>
         <button class="btn-sm-outline" onclick="toggleStatusModul('${r["ID Modul"]}','${r["Status"]}')">🔁 ${r["Status"]==="Aktif"?"Nonaktifkan":"Aktifkan"}</button>
         <button class="btn-sm-outline" style="color:var(--red);border-color:rgba(139,42,42,.3);" onclick="hapusModul('${r["ID Modul"]}','${(r["Judul"]||"").replace(/'/g,"\\'")}')">🗑️ Hapus</button>
       </td>
@@ -2690,6 +3079,507 @@ async function renderPdfBase64(base64, container) {
     await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
   }
 }
+
+
+// ═══════════════════════════════════════════
+//  WORKSHEET & TOKO MATERI — UTIL
+// ═══════════════════════════════════════════
+function rp(n) { return "Rp " + (Number(n) || 0).toLocaleString("id-ID"); }
+
+function tempelWatermark(ctx, w, h, teks) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+  ctx.rotate(-Math.PI / 6);
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = "#0A1628";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const ukuran = Math.max(16, Math.round(w / 22));
+  ctx.font = "700 " + ukuran + "px 'DM Sans', sans-serif";
+  const jarak = ukuran * 3.2;
+  for (let y = -h; y < h; y += jarak) ctx.fillText(teks, 0, y);
+  ctx.restore();
+}
+
+/**
+ * Render PDF → thumbnail + halaman pratinjau ber-watermark (JPEG base64).
+ * Diproses di browser admin, PDF asli tidak pernah bocor ke publik.
+ */
+async function bikinPratinjauDariPdf(file, jumlahPreview) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+
+  async function renderHal(p, lebarTarget, watermark) {
+    const page = await pdf.getPage(p);
+    const v1   = page.getViewport({ scale: 1 });
+    const vp   = page.getViewport({ scale: lebarTarget / v1.width });
+    const c    = document.createElement("canvas");
+    c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    if (watermark) tempelWatermark(ctx, c.width, c.height, watermark);
+    return c.toDataURL("image/jpeg", 0.75).split(",")[1];
+  }
+
+  const hasil = { total: pdf.numPages, thumb: "", previews: [] };
+  hasil.thumb = await renderHal(1, 520, null);
+  const n = Math.min(Math.max(1, jumlahPreview || 1), pdf.numPages);
+  for (let p = 1; p <= n; p++) hasil.previews.push(await renderHal(p, 980, "PRATINJAU · KATALIS EDUKA"));
+  return hasil;
+}
+
+
+// ═══════════════════════════════════════════
+//  WORKSHEET — ADMIN
+// ═══════════════════════════════════════════
+let wfPratinjau = null;
+
+async function loadWorksheet() {
+  const tbody = document.getElementById("tbody-ws");
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr>`;
+  await loadTarifData();
+  onFilterWsJenjangChange();
+  try {
+    const res = await apiPost("getAllWorksheet");
+    if (!res.ok) { toast("Gagal memuat worksheet: " + res.error, "error"); return; }
+    cache.worksheet = res.data || [];
+    filterWorksheet();
+  } catch (e) { toast("Error: " + e.message, "error"); }
+}
+
+async function onFilterWsJenjangChange() {
+  await loadTarifData();
+  const jenjang = document.getElementById("filter-ws-jenjang").value;
+  document.getElementById("filter-ws-mapel").innerHTML =
+    `<option value="">Semua Mapel</option>` + getMapelOptions(jenjang).map(m => `<option>${m}</option>`).join("");
+  filterWorksheet();
+}
+
+function filterWorksheet() {
+  const q       = (document.getElementById("search-ws").value || "").toLowerCase();
+  const jenjang = document.getElementById("filter-ws-jenjang").value;
+  const mapel   = document.getElementById("filter-ws-mapel").value;
+  const akses   = document.getElementById("filter-ws-akses").value;
+  const status  = document.getElementById("filter-ws-status").value;
+  const rows = cache.worksheet.filter(r => {
+    if (jenjang && r["Jenjang"] !== jenjang) return false;
+    if (mapel && r["Mata Pelajaran"] !== mapel) return false;
+    if (akses && String(r["Akses Tutor"]) !== akses) return false;
+    if (status && r["Status"] !== status) return false;
+    if (q && !((r["Judul"]||"").toLowerCase().includes(q) || (r["Mata Pelajaran"]||"").toLowerCase().includes(q))) return false;
+    return true;
+  });
+  renderWorksheetTable(rows);
+}
+
+function renderWorksheetTable(rows) {
+  const tbody = document.getElementById("tbody-ws");
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Belum ada worksheet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const id = r["ID Worksheet"];
+    const aksesTutor = String(r["Akses Tutor"] || "Gratis") === "Berbayar"
+      ? `<span class="badge badge-gold">Berbayar · ${rp(r["Harga Tutor"])}</span>`
+      : `<span class="badge badge-green">Gratis</span>`;
+    const toko = String(r["Dijual Publik"] || "Tidak") === "Ya"
+      ? `<span class="badge badge-blue">Dijual · ${rp(r["Harga Publik"])}</span>`
+      : `<span class="badge badge-gray">—</span>`;
+    const st = r["Status"] === "Aktif"
+      ? `<span class="badge badge-green">Aktif</span>`
+      : `<span class="badge badge-gray">Nonaktif</span>`;
+    const batas = Number(r["Batas Cetak"]) > 0 ? ` <span style="opacity:.5">(maks ${r["Batas Cetak"]})</span>` : "";
+    return `<tr>
+      <td>${r["Judul"] || "—"}</td>
+      <td>${r["Jenjang"] || "—"}</td>
+      <td>${r["Mata Pelajaran"] || "—"}</td>
+      <td>${r["Jumlah Halaman"] || "—"}</td>
+      <td>${aksesTutor}</td>
+      <td>${toko}</td>
+      <td>${r["Jumlah Dilihat"] || 0} / ${r["Jumlah Dicetak"] || 0}${batas}</td>
+      <td>${st}</td>
+      <td>
+        <button class="btn-sm-outline" onclick="previewWorksheetAdmin('${id}','${(r["Judul"]||"").replace(/'/g,"\\'")}')">👁️ Lihat</button>
+        <button class="btn-sm-outline" onclick='openWorksheetModal(${JSON.stringify(r).replace(/'/g,"&apos;")})'>✏️ Edit</button>
+        <button class="btn-sm-outline" onclick="toggleStatusWorksheet('${id}','${r["Status"]}')">🔁 ${r["Status"]==="Aktif"?"Nonaktifkan":"Aktifkan"}</button>
+        <button class="btn-sm-outline" style="color:var(--red);border-color:rgba(139,42,42,.3);" onclick="hapusWorksheetAdmin('${id}','${(r["Judul"]||"").replace(/'/g,"\\'")}')">🗑️ Hapus</button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+async function onWfJenjangChange(selectedMapel) {
+  await loadTarifData();
+  const opts = getMapelOptions(document.getElementById("wf-jenjang").value);
+  const sel  = document.getElementById("wf-mapel");
+  sel.innerHTML = opts.map(m => `<option>${m}</option>`).join("");
+  if (selectedMapel) {
+    if (!opts.includes(selectedMapel)) sel.insertAdjacentHTML("beforeend", `<option selected>${selectedMapel}</option>`);
+    else sel.value = selectedMapel;
+  }
+}
+
+function toggleHargaTutor()  { document.getElementById("wf-harga-tutor-row").style.display   = document.getElementById("wf-akses-tutor").value   === "Berbayar" ? "" : "none"; }
+function toggleHargaPeserta(){ document.getElementById("wf-harga-peserta-row").style.display = document.getElementById("wf-akses-peserta").value === "Berbayar" ? "" : "none"; }
+function toggleHargaPublik() { document.getElementById("wf-harga-publik-row").style.display  = document.getElementById("wf-dijual").value === "Ya" ? "" : "none"; }
+
+async function openWorksheetModal(row) {
+  hideAlert("ws-alert");
+  wfPratinjau = null;
+  document.getElementById("wf-file").value = "";
+  document.getElementById("wf-file-info").textContent = "";
+  document.getElementById("wf-thumb-prev").style.display = "none";
+  await loadTarifData();
+
+  const isEdit = row && row["ID Worksheet"];
+  document.getElementById("wf-title").textContent = isEdit ? "Edit Worksheet" : "Upload Worksheet";
+  document.getElementById("wf-id").value        = isEdit ? row["ID Worksheet"] : "";
+  document.getElementById("wf-judul").value     = isEdit ? (row["Judul"] || "") : "";
+  document.getElementById("wf-jenjang").value   = isEdit ? (row["Jenjang"] || "SD") : "SD";
+  onWfJenjangChange(isEdit ? (row["Mata Pelajaran"] || "") : "");
+  document.getElementById("wf-deskripsi").value = isEdit ? (row["Deskripsi"] || "") : "";
+  document.getElementById("wf-halaman").value   = isEdit ? (row["Jumlah Halaman"] || 0) : 0;
+  document.getElementById("wf-akses-tutor").value   = isEdit ? (row["Akses Tutor"] || "Gratis") : "Gratis";
+  document.getElementById("wf-harga-tutor").value   = isEdit ? (row["Harga Tutor"] || 0) : 0;
+  document.getElementById("wf-akses-peserta").value = isEdit ? (row["Akses Peserta"] || "Gratis") : "Gratis";
+  document.getElementById("wf-harga-peserta").value = isEdit ? (row["Harga Peserta"] || 0) : 0;
+  document.getElementById("wf-dijual").value        = isEdit ? (row["Dijual Publik"] || "Tidak") : "Tidak";
+  document.getElementById("wf-harga-publik").value  = isEdit ? (row["Harga Publik"] || 0) : 0;
+  document.getElementById("wf-hal-preview").value   = isEdit ? (row["Halaman Preview"] || 1) : 1;
+  document.getElementById("wf-batas-cetak").value   = isEdit ? (row["Batas Cetak"] || 0) : 0;
+  document.getElementById("wf-status").value        = isEdit ? (row["Status"] || "Aktif") : "Aktif";
+  document.getElementById("wf-file-row").querySelector(".form-label").innerHTML = isEdit
+    ? `Ganti File PDF <span style="font-weight:400;color:rgba(255,255,255,.4);">(opsional)</span>`
+    : `File PDF * <span style="font-weight:400;color:rgba(255,255,255,.4);">(maks ±15MB)</span>`;
+
+  toggleHargaTutor(); toggleHargaPeserta(); toggleHargaPublik();
+  openModal("modal-ws");
+}
+
+async function onWfFilePilih() {
+  const file = document.getElementById("wf-file").files[0];
+  const info = document.getElementById("wf-file-info");
+  if (!file) { info.textContent = ""; wfPratinjau = null; return; }
+  if (file.type !== "application/pdf") { info.textContent = "❌ File harus PDF."; wfPratinjau = null; return; }
+  info.textContent = "⏳ Membuat thumbnail & halaman pratinjau...";
+  try {
+    const n = Number(document.getElementById("wf-hal-preview").value) || 1;
+    wfPratinjau = await bikinPratinjauDariPdf(file, n);
+    document.getElementById("wf-halaman").value = wfPratinjau.total;
+    document.getElementById("wf-thumb-img").src = "data:image/jpeg;base64," + wfPratinjau.thumb;
+    document.getElementById("wf-thumb-prev").style.display = "";
+    info.textContent = `✅ ${wfPratinjau.total} halaman · ${Math.round(file.size/1024/1024*10)/10} MB · ${wfPratinjau.previews.length} halaman pratinjau siap`;
+  } catch (e) {
+    wfPratinjau = null;
+    info.textContent = "❌ Gagal membaca PDF: " + e.message;
+  }
+}
+
+async function doSimpanWorksheet() {
+  const id     = document.getElementById("wf-id").value;
+  const judul  = document.getElementById("wf-judul").value.trim();
+  const mapel  = document.getElementById("wf-mapel").value.trim();
+  const file   = document.getElementById("wf-file").files[0];
+
+  if (!judul || !mapel) { showAlert("ws-alert","Judul dan Mata Pelajaran wajib diisi.","error"); return; }
+  if (!id && !file)     { showAlert("ws-alert","File PDF wajib diupload.","error"); return; }
+  if (file && file.size > 16*1024*1024) { showAlert("ws-alert","Ukuran file maksimal ±15MB.","error"); return; }
+  if (file && !wfPratinjau) { showAlert("ws-alert","Tunggu proses thumbnail selesai dulu.","error"); return; }
+
+  const btn = document.getElementById("wf-submit-btn");
+  btn.disabled = true; btn.textContent = "Menyimpan...";
+  try {
+    const body = {
+      judul,
+      jenjang:  document.getElementById("wf-jenjang").value,
+      mapel,
+      deskripsi: document.getElementById("wf-deskripsi").value.trim(),
+      status:    document.getElementById("wf-status").value,
+      aksesTutor:   document.getElementById("wf-akses-tutor").value,
+      hargaTutor:   document.getElementById("wf-harga-tutor").value,
+      aksesPeserta: document.getElementById("wf-akses-peserta").value,
+      hargaPeserta: document.getElementById("wf-harga-peserta").value,
+      dijualPublik: document.getElementById("wf-dijual").value,
+      hargaPublik:  document.getElementById("wf-harga-publik").value,
+      halamanPreview: document.getElementById("wf-hal-preview").value,
+      batasCetak:     document.getElementById("wf-batas-cetak").value
+    };
+    if (file) {
+      document.getElementById("wf-file-info").textContent = "⏳ Mengunggah file...";
+      body.fileBase64        = await fileToBase64(file);
+      body.fileName          = file.name;
+      body.thumbBase64       = wfPratinjau.thumb;
+      body.previewBase64List = wfPratinjau.previews;
+      body.jumlahHalaman     = wfPratinjau.total;
+    }
+    let res;
+    if (id) { body.idWorksheet = id; res = await apiPost("updateWorksheet", body); }
+    else    { res = await apiPost("uploadWorksheet", body); }
+
+    if (!res.ok) { showAlert("ws-alert", res.error || "Gagal menyimpan worksheet.", "error"); return; }
+    toast(id ? "Worksheet diperbarui." : "Worksheet berhasil diupload.", "success");
+    closeModal("modal-ws");
+    loadWorksheet();
+  } catch (e) {
+    showAlert("ws-alert", "Error: " + e.message, "error");
+  } finally {
+    btn.disabled = false; btn.textContent = "📝 Simpan Worksheet";
+  }
+}
+
+async function toggleStatusWorksheet(id, statusSaatIni) {
+  const baru = statusSaatIni === "Aktif" ? "Nonaktif" : "Aktif";
+  showLoading("Memperbarui status...");
+  try {
+    const res = await apiPost("updateWorksheet", { idWorksheet: id, status: baru });
+    hideLoading();
+    if (!res.ok) { toast("Gagal: " + res.error, "error"); return; }
+    toast("Status worksheet diperbarui.", "success");
+    loadWorksheet();
+  } catch (e) { hideLoading(); toast("Error: " + e.message, "error"); }
+}
+
+async function hapusWorksheetAdmin(id, judul) {
+  if (!confirm(`Hapus worksheet "${judul}"? File PDF, thumbnail, dan halaman pratinjau di Drive ikut terhapus permanen.`)) return;
+  showLoading("Menghapus worksheet...");
+  try {
+    const res = await apiPost("hapusWorksheet", { idWorksheet: id });
+    hideLoading();
+    if (!res.ok) { toast("Gagal hapus: " + res.error, "error"); return; }
+    toast("Worksheet dihapus.", "success");
+    loadWorksheet();
+  } catch (e) { hideLoading(); toast("Error: " + e.message, "error"); }
+}
+
+async function previewWorksheetAdmin(id, judul) {
+  document.getElementById("wv-title").textContent = judul || "Pratinjau Worksheet";
+  const body = document.getElementById("wv-body");
+  body.innerHTML = `<div class="empty-state"><div class="es-icon">📄</div>Memuat worksheet...</div>`;
+  openModal("modal-ws-view");
+  try {
+    const res = await apiPost("getWorksheetFile", { idWorksheet: id });
+    if (!res.ok) { body.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div>${res.error||"Gagal memuat."}</div>`; return; }
+    await renderPdfBase64(res.data.base64, body);
+  } catch (e) {
+    body.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div>Error: ${e.message}</div>`;
+  }
+}
+
+
+// ═══════════════════════════════════════════
+//  MODUL — PENGATURAN TOKO
+// ═══════════════════════════════════════════
+let mtPratinjau = null;
+
+function openModulTokoModal(row) {
+  hideAlert("mt-alert");
+  mtPratinjau = null;
+  document.getElementById("mt-file").value = "";
+  document.getElementById("mt-file-info").textContent = "";
+  document.getElementById("mt-id").value          = row["ID Modul"];
+  document.getElementById("mt-dijual").value      = row["Dijual Publik"] || "Tidak";
+  document.getElementById("mt-harga").value       = row["Harga Publik"] || 0;
+  document.getElementById("mt-hal-preview").value = row["Halaman Preview"] || 1;
+  openModal("modal-modul-toko");
+}
+
+async function onMtFilePilih() {
+  const file = document.getElementById("mt-file").files[0];
+  const info = document.getElementById("mt-file-info");
+  if (!file) { info.textContent = ""; mtPratinjau = null; return; }
+  info.textContent = "⏳ Membuat thumbnail...";
+  try {
+    const n = Number(document.getElementById("mt-hal-preview").value) || 1;
+    mtPratinjau = await bikinPratinjauDariPdf(file, n);
+    info.textContent = `✅ ${mtPratinjau.total} halaman · thumbnail siap`;
+  } catch (e) { mtPratinjau = null; info.textContent = "❌ Gagal: " + e.message; }
+}
+
+async function doSimpanModulToko() {
+  const btn = document.getElementById("mt-submit-btn");
+  btn.disabled = true; btn.textContent = "Menyimpan...";
+  try {
+    const body = {
+      idModul:        document.getElementById("mt-id").value,
+      dijualPublik:   document.getElementById("mt-dijual").value,
+      hargaPublik:    document.getElementById("mt-harga").value,
+      halamanPreview: document.getElementById("mt-hal-preview").value
+    };
+    if (mtPratinjau) { body.thumbBase64 = mtPratinjau.thumb; body.previewBase64List = mtPratinjau.previews; }
+    const res = await apiPost("updateModulToko", body);
+    if (!res.ok) { showAlert("mt-alert", res.error || "Gagal menyimpan.", "error"); return; }
+    toast("Pengaturan toko disimpan.", "success");
+    closeModal("modal-modul-toko");
+    loadModul();
+  } catch (e) { showAlert("mt-alert", "Error: " + e.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = "🛒 Simpan"; }
+}
+
+
+// ═══════════════════════════════════════════
+//  PESANAN MATERI
+// ═══════════════════════════════════════════
+async function loadPesananMateri() {
+  const tbody = document.getElementById("tbody-pesanan");
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr>`;
+  try {
+    const res = await apiPost("getAllPesananMateri");
+    if (!res.ok) { toast("Gagal memuat pesanan: " + res.error, "error"); return; }
+    cache.pesanan = res.data || [];
+    const pending = cache.pesanan.filter(r => r["Status"] === "Menunggu Verifikasi").length;
+    const badge = document.getElementById("badge-pesanan-pending");
+    if (badge) { badge.textContent = pending; badge.style.display = pending ? "" : "none"; }
+    filterPesananMateri();
+  } catch (e) { toast("Error: " + e.message, "error"); }
+}
+
+function filterPesananMateri() {
+  const q  = (document.getElementById("search-pesanan").value || "").toLowerCase();
+  const st = document.getElementById("filter-pesanan-status").value;
+  const rows = cache.pesanan.filter(r => {
+    if (st && r["Status"] !== st) return false;
+    if (q) {
+      const hay = `${r["ID Pesanan"]} ${r["Nama Pembeli"]} ${r["Judul Item"]} ${r["No WA"]}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  renderPesananTable(rows);
+}
+
+function renderPesananTable(rows) {
+  const tbody = document.getElementById("tbody-pesanan");
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Belum ada pesanan.</td></tr>`;
+    return;
+  }
+  const warna = { "Lunas":"badge-green", "Menunggu Verifikasi":"badge-gold", "Menunggu Pembayaran":"badge-blue", "Batal":"badge-gray" };
+  tbody.innerHTML = rows.map(r => {
+    const id = r["ID Pesanan"];
+    const bukti = r["Bukti URL"]
+      ? `<a href="${r["Bukti URL"]}" target="_blank" rel="noopener" class="btn-sm-outline">🖼️ Lihat</a>`
+      : `<span style="opacity:.35">—</span>`;
+    const aksi = (r["Status"] === "Lunas" || r["Status"] === "Batal")
+      ? `<span style="opacity:.35">—</span>`
+      : `<button class="btn-sm-outline" onclick="konfirmasiPesanan('${id}')">✅ Konfirmasi</button>
+         <button class="btn-sm-outline" style="color:var(--red);border-color:rgba(139,42,42,.3);" onclick="batalkanPesanan('${id}')">✕ Batal</button>`;
+    return `<tr>
+      <td style="font-family:monospace;font-size:11.5px;">${id}</td>
+      <td>${String(r["Tanggal"]||"").slice(0,16)}</td>
+      <td>${r["Judul Item"]||"—"}<div style="font-size:10.5px;opacity:.45">${r["Jenis Item"]||""} · ${r["ID Item"]||""}</div></td>
+      <td>${r["Nama Pembeli"]||"—"}<div style="font-size:10.5px;opacity:.45">${r["No WA"]||""} · ${r["Tipe Pembeli"]||""}</div></td>
+      <td>${rp(r["Harga"])}</td>
+      <td>${bukti}</td>
+      <td><span class="badge ${warna[r["Status"]]||"badge-gray"}">${r["Status"]||"—"}</span></td>
+      <td style="font-family:monospace;font-size:11.5px;">${r["Kode Akses"]||"—"}</td>
+      <td>${aksi}</td>
+    </tr>`;
+  }).join("");
+}
+
+async function konfirmasiPesanan(id) {
+  if (!confirm(`Konfirmasi pesanan ${id} sebagai LUNAS? Kode akses akan dibuat dan dikirim via WhatsApp.`)) return;
+  showLoading("Mengonfirmasi pesanan...");
+  try {
+    const res = await apiPost("konfirmasiPesananMateri", { idPesanan: id });
+    hideLoading();
+    if (!res.ok) { toast("Gagal: " + res.error, "error"); return; }
+    toast("Lunas. Kode akses: " + res.data.kodeAkses, "success");
+    loadPesananMateri();
+  } catch (e) { hideLoading(); toast("Error: " + e.message, "error"); }
+}
+
+async function batalkanPesanan(id) {
+  const alasan = prompt("Alasan pembatalan (opsional):", "");
+  if (alasan === null) return;
+  showLoading("Membatalkan pesanan...");
+  try {
+    const res = await apiPost("batalkanPesananMateri", { idPesanan: id, catatan: alasan });
+    hideLoading();
+    if (!res.ok) { toast("Gagal: " + res.error, "error"); return; }
+    toast("Pesanan dibatalkan.", "success");
+    loadPesananMateri();
+  } catch (e) { hideLoading(); toast("Error: " + e.message, "error"); }
+}
+
+async function openBeriAksesModal() {
+  hideAlert("ba-alert");
+  document.getElementById("ba-user").value = "";
+  document.getElementById("ba-catatan").value = "";
+  if (!cache.worksheet.length) { const r = await apiPost("getAllWorksheet"); if (r.ok) cache.worksheet = r.data || []; }
+  if (!cache.modul.length)     { const r = await apiPost("getAllModul");     if (r.ok) cache.modul = r.data || []; }
+  onBaJenisChange();
+  openModal("modal-beri-akses");
+}
+
+function onBaJenisChange() {
+  const jenis = document.getElementById("ba-jenis").value;
+  const sel   = document.getElementById("ba-item");
+  const list  = jenis === "Worksheet"
+    ? cache.worksheet.map(r => ({ id: r["ID Worksheet"], judul: r["Judul"] }))
+    : cache.modul.map(r => ({ id: r["ID Modul"], judul: r["Judul"] }));
+  sel.innerHTML = list.map(x => `<option value="${x.id}">${x.judul}</option>`).join("");
+}
+
+async function doBeriAkses() {
+  const idUser = document.getElementById("ba-user").value.trim();
+  if (!idUser) { showAlert("ba-alert","ID User wajib diisi.","error"); return; }
+  const btn = document.getElementById("ba-submit-btn");
+  btn.disabled = true; btn.textContent = "Memproses...";
+  try {
+    const res = await apiPost("berikanAksesMateri", {
+      jenis:   document.getElementById("ba-jenis").value,
+      idItem:  document.getElementById("ba-item").value,
+      idUser:  idUser,
+      catatan: document.getElementById("ba-catatan").value.trim()
+    });
+    if (!res.ok) { showAlert("ba-alert", res.error || "Gagal.", "error"); return; }
+    toast(res.data.pesan, "success");
+    closeModal("modal-beri-akses");
+    loadPesananMateri();
+  } catch (e) { showAlert("ba-alert","Error: " + e.message,"error"); }
+  finally { btn.disabled = false; btn.textContent = "✅ Beri Akses"; }
+}
+
+
+// ═══════════════════════════════════════════
+//  LOG CETAK
+// ═══════════════════════════════════════════
+async function loadLogCetak() {
+  const tbody = document.getElementById("tbody-logcetak");
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr>`;
+  try {
+    const res = await apiPost("getLogCetak");
+    if (!res.ok) { toast("Gagal memuat log: " + res.error, "error"); return; }
+    cache.logcetak = res.data || [];
+    filterLogCetak();
+  } catch (e) { toast("Error: " + e.message, "error"); }
+}
+
+function filterLogCetak() {
+  const q = (document.getElementById("search-logcetak").value || "").toLowerCase();
+  const rows = cache.logcetak.filter(r => {
+    if (!q) return true;
+    return `${r["Kode Cetak"]} ${r["Nama"]} ${r["Judul Item"]} ${r["ID User"]}`.toLowerCase().includes(q);
+  });
+  const tbody = document.getElementById("tbody-logcetak");
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Belum ada aktivitas cetak.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td style="font-family:monospace;font-size:11.5px;color:var(--gold);">${r["Kode Cetak"]||"—"}</td>
+    <td>${String(r["Waktu"]||"").slice(0,16)}</td>
+    <td>${r["Nama"]||"—"}<div style="font-size:10.5px;opacity:.45">${r["ID User"]||""}</div></td>
+    <td>${r["Role"]||"—"}</td>
+    <td>${r["Judul Item"]||"—"}<div style="font-size:10.5px;opacity:.45">${r["Jenis Item"]||""} · ${r["ID Item"]||""}</div></td>
+    <td>${r["Jumlah Halaman"]||"—"}</td>
+    <td style="font-size:11.5px;opacity:.6">${r["Keterangan"]||""}</td>
+  </tr>`).join("");
+}
+
 </script>
 </body>
 </html>

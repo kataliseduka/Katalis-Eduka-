@@ -342,6 +342,49 @@ body {
 .modul-card-btn{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-3));border:none;border-radius:8px;padding:9px;color:var(--navy);font-weight:700;font-size:12px;cursor:pointer;}
 .modul-card-btn:hover{opacity:.9;}
 
+/* ── TOAST ── */
+#toast{position:fixed;right:20px;bottom:20px;z-index:2000;display:flex;flex-direction:column;gap:10px;max-width:340px;}
+.toast-item{background:var(--navy-3,#112244);border:1px solid rgba(201,168,76,.28);border-left:3px solid var(--gold);
+  border-radius:10px;padding:12px 16px;font-size:12.5px;color:rgba(255,255,255,.88);line-height:1.5;
+  box-shadow:0 8px 28px rgba(0,0,0,.45);animation:toastIn .25s ease;}
+.toast-item.success{border-left-color:#1A6B4A;}
+.toast-item.error{border-left-color:#B84A4A;}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+@media(max-width:600px){#toast{left:14px;right:14px;bottom:14px;max-width:none;}}
+
+/* ── WORKSHEET ── */
+.ws-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;}
+.ws-card{background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.14);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s;}
+.ws-card:hover{border-color:rgba(201,168,76,.35);}
+.ws-thumb{position:relative;aspect-ratio:1/1.35;background:#0d1e38;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.ws-thumb img{width:100%;height:100%;object-fit:cover;object-position:top center;}
+.ws-thumb .ws-noimg{font-size:38px;opacity:.3;}
+.ws-lock{position:absolute;inset:0;background:rgba(10,22,40,.82);backdrop-filter:blur(3px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:14px;}
+.ws-lock-icon{font-size:26px;}
+.ws-lock-price{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--gold);}
+.ws-lock-note{font-size:10.5px;color:rgba(255,255,255,.45);line-height:1.45;}
+.ws-body{padding:13px 14px 15px;display:flex;flex-direction:column;flex:1;gap:4px;}
+.ws-title{font-weight:700;font-size:13.5px;line-height:1.4;}
+.ws-meta{font-size:10.5px;color:rgba(255,255,255,.4);margin-bottom:8px;}
+.ws-actions{margin-top:auto;display:flex;gap:7px;}
+.ws-btn{flex:1;border:none;border-radius:8px;padding:8px 6px;font-weight:700;font-size:11.5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .2s;}
+.ws-btn:hover{opacity:.88;}
+.ws-btn-view{background:rgba(255,255,255,.08);color:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.14);}
+.ws-btn-print{background:linear-gradient(135deg,var(--gold),var(--gold-3));color:var(--navy);}
+.ws-btn-buy{background:rgba(201,168,76,.14);color:var(--gold);border:1px solid rgba(201,168,76,.3);}
+.ws-quota{font-size:10px;color:rgba(255,255,255,.35);margin-top:6px;text-align:center;}
+.ws-notice{background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.2);border-radius:10px;padding:12px 15px;font-size:11.5px;color:rgba(255,255,255,.62);line-height:1.6;margin-bottom:16px;}
+.ws-notice b{color:var(--gold);font-weight:600;}
+
+/* Blokir cetak halaman dashboard — cetak hanya lewat tombol resmi */
+@media print{
+  body > *:not(#frame-cetak){display:none !important;}
+  body::before{
+    content:"Cetak langsung dari halaman ini dinonaktifkan. Gunakan tombol Cetak pada worksheet.";
+    display:block;font-family:sans-serif;font-size:14px;padding:40px;color:#000;
+  }
+}
+
 /* ── MODAL (dipakai untuk pratinjau modul) ── */
 .modal-backdrop{position:fixed;inset:0;background:rgba(5,12,25,.85);z-index:600;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
 .modal-backdrop.show{display:flex;}
@@ -678,6 +721,23 @@ body {
         </div>
       </div>
 
+      <!-- ══ HALAMAN: WORKSHEET PESERTA ══ -->
+      <div class="page" id="page-worksheet-peserta">
+        <div class="page-header">
+          <div class="page-kicker">Latihan</div>
+          <h2 class="page-title">Lembar <em>Kerja</em></h2>
+          <p class="page-desc">Worksheet PDF sesuai jenjang dan mata pelajaran yang kamu ikuti. Bisa dibaca di layar dan dicetak langsung ke printer — tidak bisa diunduh.</p>
+        </div>
+        <div class="ws-notice">
+          🖨️ <b>Cara mencetak:</b> tekan tombol <b>Cetak</b>, tunggu lembar disiapkan, lalu pilih <b>printer</b> kamu di kotak dialog yang muncul. Setiap lembar otomatis diberi nama dan kode cetak milikmu.
+        </div>
+        <div class="section-card">
+          <div class="sc-body" id="ws-peserta-list">
+            <div class="empty-state"><div class="es-icon">📝</div>Memuat worksheet...</div>
+          </div>
+        </div>
+      </div>
+
       <!-- ══ HALAMAN: BERANDA TUTOR ══ -->
       <div class="page" id="page-beranda-tutor">
         <div class="greeting-card">
@@ -886,6 +946,38 @@ body {
         </div>
       </div>
 
+      <!-- ══ HALAMAN: WORKSHEET TUTOR ══ -->
+      <div class="page" id="page-worksheet-tutor">
+        <div class="page-header">
+          <div class="page-kicker">Bahan Ajar</div>
+          <h2 class="page-title">Lembar <em>Kerja</em></h2>
+          <p class="page-desc">Sebagian worksheet terbuka gratis untuk semua tutor. Worksheet bertanda gembok perlu dibeli dulu sebelum bisa dipratinjau dan dicetak.</p>
+        </div>
+        <div class="ws-notice">
+          🖨️ <b>Cara mencetak:</b> tekan tombol <b>Cetak</b>, tunggu lembar disiapkan, lalu pilih <b>printer</b> kamu di kotak dialog. Setiap lembar diberi watermark nama &amp; kode cetak, dan aktivitas cetak tercatat di sistem.
+        </div>
+        <div class="section-card">
+          <div class="modul-filters">
+            <input type="text" id="ws-tutor-search" placeholder="🔍 Cari judul / mapel..." oninput="renderWsTutorList()">
+            <select id="ws-tutor-filter-jenjang" onchange="onWsTutorJenjangChange()">
+              <option value="">Semua Jenjang</option>
+              <option>SD</option><option>SMP</option><option>SMA</option><option>Mahasiswa</option><option>Umum</option>
+            </select>
+            <select id="ws-tutor-filter-mapel" onchange="renderWsTutorList()">
+              <option value="">Semua Mapel</option>
+            </select>
+            <select id="ws-tutor-filter-akses" onchange="renderWsTutorList()">
+              <option value="">Semua</option>
+              <option value="buka">Sudah terbuka</option>
+              <option value="kunci">Terkunci</option>
+            </select>
+          </div>
+          <div class="sc-body" id="ws-tutor-list" style="padding:0;">
+            <div class="empty-state"><div class="es-icon">📝</div>Memuat worksheet...</div>
+          </div>
+        </div>
+      </div>
+
       <!-- ══ HALAMAN: GAJI & KINERJA SAYA (TUTOR) ══ -->
       <div class="page" id="page-gaji-kinerja-tutor">
         <div class="page-header">
@@ -930,6 +1022,34 @@ body {
     <div class="modal-title" id="mv-title">Pratinjau Modul</div>
     <div class="modal-desc">Mode tampilan saja — tidak untuk diunduh atau dicetak.</div>
     <div id="mv-body" style="max-height:70vh;overflow-y:auto;background:rgba(0,0,0,.25);border-radius:10px;padding:10px;text-align:center;" oncontextmenu="return false;"></div>
+  </div>
+</div>
+
+<!-- Modal: Pratinjau Worksheet -->
+<div class="modal-backdrop" id="modal-ws-view">
+  <div class="modal">
+    <button class="modal-close" onclick="closeWsViewer()">✕</button>
+    <div class="modal-title" id="wsv-title">Pratinjau Worksheet</div>
+    <div class="modal-desc">Mode tampilan saja — tidak untuk diunduh. Gunakan tombol Cetak untuk mengirim ke printer.</div>
+    <div id="wsv-body" style="max-height:62vh;overflow-y:auto;background:rgba(0,0,0,.25);border-radius:10px;padding:10px;text-align:center;" oncontextmenu="return false;"></div>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="ws-btn ws-btn-view" onclick="closeWsViewer()" style="flex:0 0 130px;">Tutup</button>
+      <button class="ws-btn ws-btn-print" id="wsv-print-btn" onclick="cetakDariViewer()">🖨️ Cetak Sekarang</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Beli Akses Worksheet -->
+<div class="modal-backdrop" id="modal-ws-beli">
+  <div class="modal" style="max-width:440px;text-align:center;">
+    <button class="modal-close" onclick="document.getElementById('modal-ws-beli').classList.remove('show')">✕</button>
+    <div style="font-size:40px;margin-bottom:8px;">🔒</div>
+    <div class="modal-title" id="wsb-title">Worksheet Berbayar</div>
+    <div class="modal-desc" id="wsb-desc">Worksheet ini bagian dari koleksi berbayar.</div>
+    <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--gold);margin:14px 0 4px;" id="wsb-harga">Rp 0</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:20px;">Pembayaran satu kali · akses selamanya</div>
+    <a id="wsb-wa" href="#" target="_blank" rel="noopener" class="ws-btn ws-btn-print" style="display:block;text-decoration:none;padding:12px;">💬 Pesan lewat WhatsApp Admin</a>
+    <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:12px;line-height:1.6;">Setelah pembayaran dikonfirmasi admin, worksheet ini otomatis terbuka di halaman ini.</div>
   </div>
 </div>
 
@@ -1153,6 +1273,7 @@ const navConfig = {
     { id:"tagihan-peserta", icon:"💳", label:"Tagihan & Bayar" },
     { id:"nilai-peserta",   icon:"📊", label:"Nilai & Progress" },
     { id:"modul-peserta",   icon:"📚", label:"Modul Belajar" },
+    { id:"worksheet-peserta", icon:"📝", label:"Lembar Kerja" },
   ],
   tutor: [
     { id:"beranda-tutor",  icon:"🏠", label:"Beranda" },
@@ -1160,6 +1281,7 @@ const navConfig = {
     { id:"input-nilai",    icon:"📝", label:"Input Nilai" },
     { id:"input-absensi",  icon:"✅", label:"Input Absensi" },
     { id:"modul-tutor",    icon:"📚", label:"Modul Belajar" },
+    { id:"worksheet-tutor", icon:"📝", label:"Lembar Kerja" },
     { id:"gaji-kinerja-tutor", icon:"💰", label:"Gaji & Kinerja Saya" },
   ],
   admin: [
@@ -1261,11 +1383,13 @@ async function lazyLoadPage(pageId) {
     if (pageId === "tagihan-peserta") await loadTagihanPeserta();
     if (pageId === "nilai-peserta")   await loadNilaiPeserta();
     if (pageId === "modul-peserta")   await loadModulPeserta();
+    if (pageId === "worksheet-peserta") await loadWsPeserta();
   } else if (state.role === "tutor") {
     if (pageId === "jadwal-tutor")    await loadJadwalTutor();
     if (pageId === "input-nilai")     renderInputNilaiForm();
     if (pageId === "input-absensi")   { renderInputAbsensiForm(); loadRiwayatAbsensiTutor(); }
     if (pageId === "modul-tutor")     await loadModulTutor();
+    if (pageId === "worksheet-tutor") await loadWsTutor();
     if (pageId === "gaji-kinerja-tutor") await loadGajiKinerjaSaya();
   }
 }
@@ -2081,6 +2205,346 @@ async function renderPdfBase64(base64, container) {
     await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
   }
 }
+
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+(function(){
+  if (!document.getElementById("toast")) {
+    const box = document.createElement("div");
+    box.id = "toast";
+    document.body.appendChild(box);
+  }
+})();
+function toast(msg, type = "info") {
+  const box = document.getElementById("toast");
+  if (!box) return;
+  const el = document.createElement("div");
+  el.className = "toast-item " + (type === "success" ? "success" : type === "error" ? "error" : "");
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+// ═══════════════════════════════════════════
+//  WORKSHEET — STATE & UTIL
+// ═══════════════════════════════════════════
+let wsPesertaCache = [];
+let wsTutorCache   = [];
+let wsAktif        = null;
+
+function rpWs(n) { return "Rp " + (Number(n) || 0).toLocaleString("id-ID"); }
+
+function waAdminLink(pesan) {
+  const wa = (state.rekening && (state.rekening.waAdmin || state.rekening.wa)) || "6285154066396";
+  return "https://wa.me/" + String(wa).replace(/\D/g, "") + "?text=" + encodeURIComponent(pesan);
+}
+
+function kartuWorksheet(w) {
+  const id    = w["ID Worksheet"];
+  const judul = (w["Judul"] || "").replace(/'/g, "\\'");
+  const thumb = w["Thumb URL"]
+    ? `<img src="${w["Thumb URL"]}" alt="" loading="lazy" draggable="false" oncontextmenu="return false;">`
+    : `<div class="ws-noimg">📝</div>`;
+  const kunci = w.terkunci
+    ? `<div class="ws-lock">
+         <div class="ws-lock-icon">🔒</div>
+         <div class="ws-lock-price">${rpWs(w.harga)}</div>
+         <div class="ws-lock-note">Beli sekali,<br>akses selamanya</div>
+       </div>` : "";
+  const hal   = w["Jumlah Halaman"] ? `${w["Jumlah Halaman"]} hal` : "";
+  const meta  = [w["Jenjang"], w["Mata Pelajaran"], hal].filter(Boolean).join(" · ");
+  const batas = Number(w["Batas Cetak"]) > 0
+    ? `<div class="ws-quota">Batas cetak ${w["Batas Cetak"]}×</div>` : "";
+
+  const aksi = w.terkunci
+    ? `<button class="ws-btn ws-btn-buy" onclick="bukaModalBeli('${id}','${judul}',${Number(w.harga)||0})">🔒 Beli Akses</button>`
+    : `<button class="ws-btn ws-btn-view" onclick="bukaWsViewer('${id}','${judul}')">👁️ Lihat</button>
+       <button class="ws-btn ws-btn-print" onclick="cetakWorksheet('${id}','${judul}')">🖨️ Cetak</button>`;
+
+  return `<div class="ws-card">
+    <div class="ws-thumb">${thumb}${kunci}</div>
+    <div class="ws-body">
+      <div class="ws-title">${w["Judul"] || "—"}</div>
+      <div class="ws-meta">${meta}</div>
+      <div class="ws-actions">${aksi}</div>
+      ${batas}
+    </div>
+  </div>`;
+}
+
+function bukaModalBeli(id, judul, harga) {
+  document.getElementById("wsb-title").textContent = judul;
+  document.getElementById("wsb-harga").textContent = rpWs(harga);
+  document.getElementById("wsb-desc").textContent =
+    "Worksheet ini bagian dari koleksi berbayar Katalis Eduka. Hubungi admin untuk membeli aksesnya.";
+  document.getElementById("wsb-wa").href = waAdminLink(
+    `Halo Admin Katalis Eduka, saya ${state.nama || ""} (${state.id || ""}) ingin membeli akses worksheet "${judul}" (${id}) seharga ${rpWs(harga)}. Mohon info pembayarannya.`);
+  document.getElementById("modal-ws-beli").classList.add("show");
+}
+
+
+// ═══════════════════════════════════════════
+//  WORKSHEET — PESERTA
+// ═══════════════════════════════════════════
+async function loadWsPeserta() {
+  const el = document.getElementById("ws-peserta-list");
+  el.innerHTML = `<div class="empty-state"><div class="es-icon">📝</div>Memuat worksheet...</div>`;
+  try {
+    const res = await apiPost("getDaftarWorksheetPeserta");
+    if (!res.ok) { el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${res.error}</div>`; return; }
+    wsPesertaCache = res.data || [];
+    if (!wsPesertaCache.length) {
+      el.innerHTML = `<div class="empty-state"><div class="es-icon">📝</div>Belum ada worksheet untuk jenjang/mapel kamu saat ini.</div>`;
+      return;
+    }
+    const grup = {};
+    wsPesertaCache.forEach(w => {
+      const m = w["Mata Pelajaran"] || "Umum";
+      (grup[m] = grup[m] || []).push(w);
+    });
+    el.innerHTML = Object.keys(grup).map(mapel => `
+      <div class="modul-group-title">📝 ${mapel}</div>
+      <div class="ws-grid">${grup[mapel].map(w => kartuWorksheet(w)).join("")}</div>
+    `).join("");
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${e.message}</div>`;
+  }
+}
+
+
+// ═══════════════════════════════════════════
+//  WORKSHEET — TUTOR
+// ═══════════════════════════════════════════
+async function loadWsTutor() {
+  const el = document.getElementById("ws-tutor-list");
+  el.innerHTML = `<div class="empty-state"><div class="es-icon">📝</div>Memuat worksheet...</div>`;
+  await loadTarifData();
+  onWsTutorJenjangChange();
+  try {
+    const res = await apiPost("getDaftarWorksheetTutor");
+    if (!res.ok) { el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${res.error}</div>`; return; }
+    wsTutorCache = res.data || [];
+    renderWsTutorList();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${e.message}</div>`;
+  }
+}
+
+async function onWsTutorJenjangChange() {
+  await loadTarifData();
+  const jenjang = document.getElementById("ws-tutor-filter-jenjang").value;
+  document.getElementById("ws-tutor-filter-mapel").innerHTML =
+    `<option value="">Semua Mapel</option>` + getMapelOptions(jenjang).map(m => `<option>${m}</option>`).join("");
+  renderWsTutorList();
+}
+
+function renderWsTutorList() {
+  const el      = document.getElementById("ws-tutor-list");
+  const q       = (document.getElementById("ws-tutor-search").value || "").toLowerCase();
+  const jenjang = document.getElementById("ws-tutor-filter-jenjang").value;
+  const mapel   = document.getElementById("ws-tutor-filter-mapel").value;
+  const akses   = document.getElementById("ws-tutor-filter-akses").value;
+
+  const rows = wsTutorCache.filter(w => {
+    if (jenjang && w["Jenjang"] !== jenjang) return false;
+    if (mapel && w["Mata Pelajaran"] !== mapel) return false;
+    if (akses === "buka"  && w.terkunci) return false;
+    if (akses === "kunci" && !w.terkunci) return false;
+    if (q && !((w["Judul"]||"").toLowerCase().includes(q) || (w["Mata Pelajaran"]||"").toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">📝</div>Tidak ada worksheet yang cocok.</div>`;
+    return;
+  }
+  const jmlKunci = rows.filter(w => w.terkunci).length;
+  const info = jmlKunci
+    ? `<div style="padding:14px 20px 0;font-size:11.5px;color:rgba(255,255,255,.4);">${rows.length - jmlKunci} terbuka · ${jmlKunci} berbayar</div>` : "";
+  el.innerHTML = info + `<div class="ws-grid" style="padding:16px 20px;">${rows.map(w => kartuWorksheet(w)).join("")}</div>`;
+}
+
+
+// ═══════════════════════════════════════════
+//  VIEWER WORKSHEET
+// ═══════════════════════════════════════════
+async function bukaWsViewer(id, judul) {
+  wsAktif = { id, judul };
+  document.getElementById("wsv-title").textContent = judul || "Pratinjau Worksheet";
+  const body = document.getElementById("wsv-body");
+  body.innerHTML = `<div class="empty-state"><div class="es-icon">📄</div>Memuat worksheet...</div>`;
+  document.getElementById("modal-ws-view").classList.add("show");
+  try {
+    const res = await apiPost("getWorksheetFile", { idWorksheet: id });
+    if (!res.ok) { body.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div>${res.error||"Gagal memuat."}</div>`; return; }
+    await renderPdfBase64(res.data.base64, body);
+  } catch (e) {
+    body.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div>Error: ${e.message}</div>`;
+  }
+}
+
+function closeWsViewer() {
+  document.getElementById("modal-ws-view").classList.remove("show");
+  document.getElementById("wsv-body").innerHTML = "";
+  wsAktif = null;
+}
+document.getElementById("modal-ws-view")?.addEventListener("click", e => {
+  if (e.target.id === "modal-ws-view") closeWsViewer();
+});
+
+function cetakDariViewer() {
+  if (!wsAktif) return;
+  cetakWorksheet(wsAktif.id, wsAktif.judul);
+}
+
+
+// ═══════════════════════════════════════════
+//  CETAK — RENDER + WATERMARK + KIRIM KE PRINTER
+// ═══════════════════════════════════════════
+function tempelWatermarkCetak(ctx, w, h, teks) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+  ctx.rotate(-Math.PI / 6);
+  ctx.globalAlpha = 0.11;
+  ctx.fillStyle = "#0A1628";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const ukuran = Math.max(12, Math.round(w / 34));
+  ctx.font = "600 " + ukuran + "px sans-serif";
+  const jarak = ukuran * 4.2;
+  for (let y = -h; y < h; y += jarak) ctx.fillText(teks, 0, y);
+  ctx.restore();
+}
+
+function tempelFooterCetak(ctx, w, h, teks, noHal, totalHal) {
+  ctx.save();
+  ctx.globalAlpha = 0.62;
+  ctx.fillStyle = "#0A1628";
+  const ukuran = Math.max(9, Math.round(w / 95));
+  ctx.font = "500 " + ukuran + "px sans-serif";
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+  ctx.fillText(teks, ukuran * 2, h - ukuran * 1.6);
+  ctx.textAlign = "right";
+  ctx.fillText("Hal. " + noHal + "/" + totalHal, w - ukuran * 2, h - ukuran * 1.6);
+  ctx.restore();
+}
+
+async function pdfKeGambarCetak(base64, watermark, footer) {
+  if (!window.pdfjsLib) throw new Error("Viewer PDF tidak tersedia.");
+  const raw   = atob(base64);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+
+  const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+  const LEBAR_CETAK = 1240;
+  const hasil = [];
+
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const v1   = page.getViewport({ scale: 1 });
+    const vp   = page.getViewport({ scale: LEBAR_CETAK / v1.width });
+    const c    = document.createElement("canvas");
+    c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    tempelWatermarkCetak(ctx, c.width, c.height, watermark);
+    tempelFooterCetak(ctx, c.width, c.height, footer, p, pdf.numPages);
+    hasil.push(c.toDataURL("image/jpeg", 0.92));
+  }
+  return hasil;
+}
+
+function jalankanCetak(dataUrls, judul) {
+  const lama = document.getElementById("frame-cetak");
+  if (lama) lama.remove();
+
+  const f = document.createElement("iframe");
+  f.id = "frame-cetak";
+  f.setAttribute("aria-hidden", "true");
+  f.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none;";
+  document.body.appendChild(f);
+
+  const d = f.contentWindow.document;
+  d.open();
+  d.write(
+    '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' +
+    String(judul).replace(/[<>]/g, "") + '</title><style>' +
+    '@page{size:A4;margin:0;}' +
+    'html,body{margin:0;padding:0;background:#fff;}' +
+    'img{display:block;width:100%;height:auto;page-break-after:always;break-after:page;}' +
+    'img:last-child{page-break-after:auto;break-after:auto;}' +
+    '</style></head><body>' +
+    dataUrls.map(u => '<img src="' + u + '">').join("") +
+    '</body></html>'
+  );
+  d.close();
+
+  const imgs = d.images;
+  if (!imgs.length) { f.remove(); toast("Tidak ada halaman untuk dicetak.", "error"); return; }
+  let siap = 0;
+  const cek = () => {
+    if (++siap < imgs.length) return;
+    setTimeout(() => {
+      try { f.contentWindow.focus(); f.contentWindow.print(); }
+      catch (err) { toast("Gagal membuka dialog cetak: " + err.message, "error"); }
+      setTimeout(() => { try { d.body.innerHTML = ""; } catch (_) {} f.remove(); }, 90000);
+    }, 120);
+  };
+  for (let i = 0; i < imgs.length; i++) {
+    if (imgs[i].complete) cek();
+    else { imgs[i].onload = cek; imgs[i].onerror = cek; }
+  }
+}
+
+async function cetakWorksheet(id, judul) {
+  showLoading("Meminta izin cetak...");
+  try {
+    const kodeRes = await apiPost("mintaKodeCetak", { idWorksheet: id });
+    if (!kodeRes.ok) { hideLoading(); toast(kodeRes.error || "Gagal meminta izin cetak.", "error"); return; }
+    const { watermark, footer, kode, sisaKuota } = kodeRes.data;
+
+    showLoading("Menyiapkan lembar cetak...");
+    const fileRes = await apiPost("getWorksheetFile", { idWorksheet: id });
+    if (!fileRes.ok) { hideLoading(); toast(fileRes.error || "Gagal memuat worksheet.", "error"); return; }
+
+    const gambar = await pdfKeGambarCetak(fileRes.data.base64, watermark, footer);
+    hideLoading();
+    jalankanCetak(gambar, judul);
+
+    const sisa = Number(sisaKuota);
+    toast(sisa >= 0
+      ? "Lembar siap dicetak. Kode " + kode + ". Sisa kuota cetak: " + sisa + "×."
+      : "Lembar siap dicetak. Kode " + kode + ".", "success");
+  } catch (e) {
+    hideLoading();
+    toast("Error: " + e.message, "error");
+  }
+}
+
+
+// ═══════════════════════════════════════════
+//  PROTEKSI DASAR
+// ═══════════════════════════════════════════
+document.addEventListener("keydown", e => {
+  const k = (e.key || "").toLowerCase();
+  const modal = document.getElementById("modal-ws-view");
+  const viewerTerbuka = modal && modal.classList.contains("show");
+  if ((e.ctrlKey || e.metaKey) && k === "p") {
+    e.preventDefault();
+    if (viewerTerbuka && wsAktif) cetakDariViewer();
+    else toast("Gunakan tombol Cetak pada worksheet untuk mencetak.", "info");
+    return;
+  }
+  if (viewerTerbuka && (e.ctrlKey || e.metaKey) && k === "s") {
+    e.preventDefault();
+    toast("Worksheet tidak dapat diunduh.", "info");
+  }
+});
+document.getElementById("wsv-body")?.addEventListener("dragstart", e => e.preventDefault());
 
 window.addEventListener("DOMContentLoaded", async () => {
   loadTarifData();
