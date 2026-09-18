@@ -155,15 +155,11 @@ footer{border-top:1px solid var(--line);padding:32px clamp(18px,4vw,60px);text-a
 </section>
 
 <div class="toolbar">
-  <div class="tabs">
-    <button class="tab active" data-tab="worksheet" onclick="gantiTab('worksheet',this)">📝 Worksheet</button>
-    <button class="tab" data-tab="modul" onclick="gantiTab('modul',this)">📚 Modul Belajar</button>
-  </div>
+  <div class="tabs" id="kategori-tabs"></div>
   <div class="filters">
     <input id="f-cari" placeholder="🔍 Cari judul atau mata pelajaran..." oninput="render()">
     <select id="f-jenjang" onchange="render()">
       <option value="">Semua Jenjang</option>
-      <option>SD</option><option>SMP</option><option>SMA</option><option>Mahasiswa</option><option>Umum</option>
     </select>
     <select id="f-urut" onchange="render()">
       <option value="baru">Terbaru</option>
@@ -290,11 +286,12 @@ footer{border-top:1px solid var(--line);padding:32px clamp(18px,4vw,60px);text-a
   <div class="modal wide">
     <button class="mclose" onclick="tutupViewer()">✕</button>
     <div class="mtitle" id="vw-title">Materi</div>
-    <div class="mdesc">Lisensi pribadi. Materi bisa dibaca dan dicetak, tidak untuk diunduh atau dibagikan ulang.</div>
+    <div class="mdesc">Lisensi pribadi — materi ini sudah kamu beli, bisa dicetak dan diunduh untuk dipakai sendiri.</div>
     <div class="preview-stack" id="vw-body" style="max-height:58vh;" oncontextmenu="return false;"></div>
     <div class="mactions">
       <button class="cbtn cbtn-view" onclick="tutupViewer()" style="flex:0 0 120px;">Tutup</button>
-      <button class="cbtn cbtn-buy" onclick="cetakMateriPublik()">🖨️ Cetak</button>
+      <button class="cbtn cbtn-view" onclick="cetakMateriPublik()">🖨️ Cetak</button>
+      <button class="cbtn cbtn-buy" onclick="unduhMateriPublik()">⬇️ Unduh</button>
     </div>
   </div>
 </div>
@@ -312,17 +309,26 @@ if (window.pdfjsLib) {
    ═══════════════════════════════════════════ */
 const API_URL = "https://script.google.com/macros/s/AKfycbz-lM8m9k7B88sjcCbdVfQWtkAJXZC1WAg4fgqiBleU6c7S8FVkxqnItt76vTRaNOzs/exec";
 
-let DATA   = { worksheet: [], modul: [], rekening: {}, wa: "" };
-let tabAktif = "worksheet";
+let DATA   = { kategori: [], jenjangList: [], rekeningList: [], wa: "" };
+let tabAktif = null;
 let itemAktif = null;
 let materiAktif = null;  // { base64, judul, watermark, footer }
 
 document.getElementById("thn").textContent = new Date().getFullYear();
 
 /* ── API ── */
+async function bacaResponsAman(r) {
+  const teks = await r.text();
+  try {
+    return JSON.parse(teks);
+  } catch (e) {
+    console.error("Respons server bukan JSON:", teks.slice(0, 300));
+    throw new Error("Server tidak merespons dengan benar. Coba lagi beberapa saat, atau hubungi admin jika berulang.");
+  }
+}
 async function apiGet(action) {
   const r = await fetch(`${API_URL}?action=${action}`);
-  return await r.json();
+  return bacaResponsAman(r);
 }
 async function apiPost(action, body = {}) {
   const r = await fetch(API_URL, {
@@ -330,7 +336,7 @@ async function apiPost(action, body = {}) {
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({ action, ...body })
   });
-  return await r.json();
+  return bacaResponsAman(r);
 }
 
 function rp(n) { return "Rp " + (Number(n) || 0).toLocaleString("id-ID"); }
@@ -347,17 +353,36 @@ document.querySelectorAll(".backdrop").forEach(b => {
 });
 
 /* ── MUAT KATALOG ── */
+const IKON_KATEGORI = { worksheet: "📝", modul: "📚" };
+
 async function muat() {
   try {
     const res = await apiGet("getPublicToko");
     if (!res.ok) throw new Error(res.error || "Gagal memuat katalog.");
     DATA = res.data;
+    renderTabs();
+    isiSelectJenjangToko();
     render();
   } catch (e) {
     document.getElementById("daftar").innerHTML =
       `<div class="empty"><div class="ic">⚠️</div>${e.message}<br><br>
        <button class="btn-gold" onclick="muat()">Coba lagi</button></div>`;
   }
+}
+
+function renderTabs() {
+  const wrap = document.getElementById("kategori-tabs");
+  const list = DATA.kategori || [];
+  if (!tabAktif && list.length) tabAktif = list[0].key;
+  wrap.innerHTML = list.map(k =>
+    `<button class="tab ${k.key === tabAktif ? "active" : ""}" data-tab="${k.key}" onclick="gantiTab('${k.key}',this)">${IKON_KATEGORI[k.key] || "🗂️"} ${k.label}</button>`
+  ).join("");
+}
+
+function isiSelectJenjangToko() {
+  const sel = document.getElementById("f-jenjang");
+  const list = DATA.jenjangList || [];
+  sel.innerHTML = `<option value="">Semua Jenjang</option>` + list.map(j => `<option value="${j}">${j}</option>`).join("");
 }
 
 function gantiTab(t, el) {
@@ -367,12 +392,17 @@ function gantiTab(t, el) {
   render();
 }
 
+function kategoriAktif() {
+  return (DATA.kategori || []).find(k => k.key === tabAktif) || { items: [], label: "materi" };
+}
+
 function render() {
   const q       = (document.getElementById("f-cari").value || "").toLowerCase();
   const jenjang = document.getElementById("f-jenjang").value;
   const urut    = document.getElementById("f-urut").value;
+  const kat     = kategoriAktif();
 
-  let list = (DATA[tabAktif] || []).filter(x => {
+  let list = (kat.items || []).filter(x => {
     if (jenjang && x.jenjang !== jenjang) return false;
     if (q && !(`${x.judul} ${x.mapel} ${x.deskripsi}`.toLowerCase().includes(q))) return false;
     return true;
@@ -382,14 +412,14 @@ function render() {
 
   const el = document.getElementById("daftar");
   if (!list.length) {
-    el.innerHTML = `<div class="empty"><div class="ic">🗂️</div>Belum ada ${tabAktif === "worksheet" ? "worksheet" : "modul"} yang cocok dengan pencarianmu.</div>`;
+    el.innerHTML = `<div class="empty"><div class="ic">🗂️</div>Belum ada ${kat.label.toLowerCase()} yang cocok dengan pencarianmu.</div>`;
     return;
   }
 
   el.innerHTML = `<div class="grid">` + list.map(x => {
     const thumb = x.thumb
       ? `<img src="${x.thumb}" alt="" loading="lazy" draggable="false" oncontextmenu="return false;">`
-      : `<div class="noimg">${tabAktif === "worksheet" ? "📝" : "📚"}</div>`;
+      : `<div class="noimg">${IKON_KATEGORI[tabAktif] || "🗂️"}</div>`;
     const meta = [x.jenjang, x.mapel, x.halaman ? x.halaman + " hal" : ""].filter(Boolean).join(" · ");
     return `<div class="card">
       <div class="card-thumb">
@@ -410,8 +440,11 @@ function render() {
 }
 
 function cariItem(jenis, id) {
-  const src = jenis === "Worksheet" ? DATA.worksheet : DATA.modul;
-  return src.find(x => x.id === id);
+  for (const k of (DATA.kategori || [])) {
+    const found = (k.items || []).find(x => x.jenis === jenis && x.id === id);
+    if (found) return found;
+  }
+  return null;
 }
 
 /* ── PRATINJAU ── */
@@ -450,6 +483,24 @@ function mulaiBeli(jenis, id) {
   bukaModal("m-beli");
 }
 
+function bangunPesanWA(d) {
+  const banks = d.rekeningList || [];
+  const bankText = banks.length
+    ? banks.map(b => `${b.bank}: ${b.nomor}\na.n. ${b.atasNama}`).join("\n\n")
+    : "Hubungi admin untuk info rekening.";
+  return `Halo Admin Katalis Eduka! Saya ingin melanjutkan transaksi:\n\n` +
+    `🧾 Kode Pesanan: ${d.idPesanan}\n` +
+    `📘 Item: ${d.judul}\n` +
+    `💰 Total: ${rp(d.harga)}\n\n` +
+    `Silakan transfer ke:\n${bankText}\n\n` +
+    `Setelah transfer, saya akan kirim bukti bayarnya di chat ini.`;
+}
+
+function waLink(nomor, teks) {
+  const digit = String(nomor || "").replace(/\D/g, "");
+  return `https://wa.me/${digit}?text=${encodeURIComponent(teks)}`;
+}
+
 async function buatPesanan() {
   const nama  = document.getElementById("bl-nama").value.trim();
   const wa    = document.getElementById("bl-wa").value.trim();
@@ -464,28 +515,37 @@ async function buatPesanan() {
     });
     if (!res.ok) { pesan("bl-alert", res.error || "Gagal membuat pesanan.", "err"); return; }
     const d = res.data;
-    const bank = d.rekening || {};
+    const banks = d.rekeningList || [];
+    const bankRows = banks.length
+      ? banks.map(b => `<div class="pay-row"><span>${b.bank}</span><span class="code" style="font-size:13px">${b.nomor}<br><span style="font-weight:400;font-size:10.5px;color:rgba(255,255,255,.4)">a.n. ${b.atasNama}</span></span></div>`).join("")
+      : `<div class="pay-row"><span>Rekening</span><span>Hubungi admin</span></div>`;
+
+    const tautanWA = waLink(DATA.wa, bangunPesanWA(d));
+
     document.getElementById("bl-form").style.display = "none";
     document.getElementById("bl-hasil").style.display = "";
     document.getElementById("bl-hasil").innerHTML = `
-      <div class="alert ok show">Pesanan berhasil dibuat. Detail pembayaran juga dikirim ke WhatsApp kamu.</div>
+      <div class="alert ok show">Pesanan berhasil dibuat. Lanjutkan transaksi di WhatsApp untuk konfirmasi pembayaran.</div>
       <div class="pay-box">
         <div class="pay-row"><span>Kode Pesanan</span><span class="code">${d.idPesanan}</span></div>
         <div class="pay-row"><span>Materi</span><span>${d.judul}</span></div>
         <div class="pay-row"><span>Total</span><span style="color:var(--gold)">${rp(d.harga)}</span></div>
         <div style="border-top:1px solid rgba(201,168,76,.2);margin:10px 0;"></div>
-        <div class="pay-row"><span>Bank</span><span>${bank.bank || "—"}</span></div>
-        <div class="pay-row"><span>No. Rekening</span><span class="code" style="font-size:13px">${bank.nomor || "—"}</span></div>
-        <div class="pay-row"><span>Atas Nama</span><span>${bank.atasNama || "—"}</span></div>
+        ${bankRows}
       </div>
       <div style="font-size:11.5px;color:rgba(255,255,255,.42);line-height:1.65;">
-        Simpan kode pesanan di atas. Setelah transfer, klik tombol di bawah untuk mengunggah bukti bayar.
-        Kode akses akan dikirim via WhatsApp setelah admin memverifikasi.
+        Simpan kode pesanan di atas. Lanjutkan ke WhatsApp untuk kirim bukti transfer langsung ke admin —
+        atau upload di sini kalau kamu lebih suka lewat website.
+      </div>
+      <div class="mactions">
+        <a class="cbtn cbtn-buy" href="${tautanWA}" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">💬 Lanjut di WhatsApp</a>
       </div>
       <div class="mactions">
         <button class="cbtn cbtn-view" onclick="tutupModal('m-beli')" style="flex:0 0 110px;">Tutup</button>
-        <button class="cbtn cbtn-buy" onclick="tutupModal('m-beli');document.getElementById('bk-kode').value='${d.idPesanan}';bukaModal('m-bukti');">Upload Bukti Bayar</button>
+        <button class="cbtn cbtn-view" onclick="tutupModal('m-beli');document.getElementById('bk-kode').value='${d.idPesanan}';bukaModal('m-bukti');">Upload Bukti (Web)</button>
       </div>`;
+
+    window.open(tautanWA, "_blank");
   } catch (e) {
     pesan("bl-alert", "Error: " + e.message, "err");
   } finally {
@@ -631,6 +691,22 @@ function footerKanvas(ctx, w, h, teks, p, total) {
   ctx.textAlign = "left";  ctx.fillText(teks, s * 2, h - s * 1.6);
   ctx.textAlign = "right"; ctx.fillText(`Hal. ${p}/${total}`, w - s * 2, h - s * 1.6);
   ctx.restore();
+}
+
+function unduhMateriPublik() {
+  if (!materiAktif) return;
+  const raw = atob(materiAktif.base64);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  const blob = new Blob([bytes], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (materiAktif.judul || "materi").replace(/[\\/:*?"<>|]/g, "-") + ".pdf";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
 async function cetakMateriPublik() {

@@ -679,7 +679,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <input class="search-input" id="search-ws" placeholder="🔍 Cari judul / mapel..." oninput="filterWorksheet()">
           <select class="filter-select" id="filter-ws-jenjang" onchange="onFilterWsJenjangChange()">
             <option value="">Semua Jenjang</option>
-            <option>SD</option><option>SMP</option><option>SMA</option><option>Mahasiswa</option><option>Umum</option>
           </select>
           <select class="filter-select" id="filter-ws-mapel" onchange="filterWorksheet()">
             <option value="">Semua Mapel</option>
@@ -727,9 +726,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <table class="tbl">
             <thead><tr>
               <th>Kode</th><th>Tanggal</th><th>Item</th><th>Pembeli</th>
-              <th>Harga</th><th>Bukti</th><th>Status</th><th>Kode Akses</th><th>Aksi</th>
+              <th>Harga</th><th>Bukti</th><th>Status</th><th>Kode Akses</th><th>Pengiriman</th><th>Aksi</th>
             </tr></thead>
-            <tbody id="tbody-pesanan"><tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
+            <tbody id="tbody-pesanan"><tr><td colspan="10" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Memuat data...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1125,13 +1124,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     <div class="form-grid">
       <div class="form-row">
         <label class="form-label">Jenjang Siswa *</label>
-        <select class="form-select" id="mf-jenjang" onchange="onMfJenjangChange()">
-          <option value="SD">SD</option>
-          <option value="SMP">SMP</option>
-          <option value="SMA">SMA</option>
-          <option value="Mahasiswa">Mahasiswa</option>
-          <option value="Umum">Umum</option>
-        </select>
+        <select class="form-select" id="mf-jenjang" onchange="onMfJenjangChange()"></select>
       </div>
       <div class="form-row">
         <label class="form-label">Mata Pelajaran *</label>
@@ -1147,6 +1140,41 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <input class="form-input" id="mf-file" type="file" accept="application/pdf">
       <div id="mf-file-info" style="font-size:11px;color:rgba(255,255,255,.4);margin-top:6px;"></div>
     </div>
+
+    <div style="border-top:1px solid rgba(201,168,76,.15);margin:18px 0 14px;padding-top:14px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Akses Tutor</div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Status Akses Tutor</label>
+          <select class="form-select" id="mf-akses-tutor" onchange="toggleHargaTutorModul()">
+            <option value="Gratis">Gratis — semua tutor bisa lihat &amp; unduh</option>
+            <option value="Berbayar">Berbayar — tutor harus beli untuk unduh</option>
+          </select>
+        </div>
+        <div class="form-row" id="mf-harga-tutor-row" style="display:none;">
+          <label class="form-label">Harga untuk Tutor (Rp)</label>
+          <input class="form-input" id="mf-harga-tutor" type="number" min="0" step="1000" value="0">
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(201,168,76,.15);margin:0 0 14px;padding-top:14px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Akses Peserta</div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Status Akses Peserta</label>
+          <select class="form-select" id="mf-akses-peserta" onchange="toggleHargaPesertaModul()">
+            <option value="Gratis">Gratis — sesuai jenjang &amp; mapel yang diikuti</option>
+            <option value="Berbayar">Berbayar — peserta harus beli untuk unduh</option>
+          </select>
+        </div>
+        <div class="form-row" id="mf-harga-peserta-row" style="display:none;">
+          <label class="form-label">Harga untuk Peserta (Rp)</label>
+          <input class="form-input" id="mf-harga-peserta" type="number" min="0" step="1000" value="0">
+        </div>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;">Baik gratis maupun berbayar, modul selalu bisa dipratinjau. Status di atas hanya menentukan apakah modul bisa <b>diunduh</b> tanpa membeli.</div>
+    </div>
+
     <div class="form-row">
       <label class="form-label">Status</label>
       <select class="form-select" id="mf-status">
@@ -1178,10 +1206,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
     <div class="form-grid">
       <div class="form-row">
         <label class="form-label">Jenjang *</label>
-        <select class="form-select" id="wf-jenjang" onchange="onWfJenjangChange()">
-          <option value="SD">SD</option><option value="SMP">SMP</option><option value="SMA">SMA</option>
-          <option value="Mahasiswa">Mahasiswa</option><option value="Umum">Umum</option>
-        </select>
+        <select class="form-select" id="wf-jenjang" onchange="onWfJenjangChange()"></select>
       </div>
       <div class="form-row">
         <label class="form-label">Mata Pelajaran *</label>
@@ -1540,19 +1565,42 @@ function updateClock() {
 }
 
 // ── API ──
+async function bacaResponsAman(res) {
+  const teks = await res.text();
+  try {
+    return JSON.parse(teks);
+  } catch (e) {
+    console.error("Respons server bukan JSON:", teks.slice(0, 300));
+    const kemungkinan = res.status === 0 || !res.ok
+      ? "Kemungkinan: kuota Apps Script harian habis, atau URL deployment salah/nonaktif."
+      : "Kemungkinan: file terlalu besar untuk diproses sekaligus, kode Apps Script belum di-deploy ulang (perlu 'New version'), atau kuota Google harian habis.";
+    throw new Error("Server tidak merespons dengan benar (status " + res.status + "). " + kemungkinan + " Coba lagi beberapa saat, atau hubungi admin jika berulang.");
+  }
+}
+
 async function apiPost(action, body = {}) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain" },
-    body: JSON.stringify({ action, token: state.token, ...body })
-  });
-  return res.json();
+  let res;
+  try {
+    res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ action, token: state.token, ...body })
+    });
+  } catch (e) {
+    throw new Error("Tidak bisa menghubungi server. Cek koneksi internet kamu, lalu coba lagi.");
+  }
+  return bacaResponsAman(res);
 }
 
 async function apiGet(action, params = {}) {
   const qs = new URLSearchParams({ action, ...params }).toString();
-  const res = await fetch(API_URL + "?" + qs);
-  return res.json();
+  let res;
+  try {
+    res = await fetch(API_URL + "?" + qs);
+  } catch (e) {
+    throw new Error("Tidak bisa menghubungi server. Cek koneksi internet kamu, lalu coba lagi.");
+  }
+  return bacaResponsAman(res);
 }
 
 // ── DATA MAPEL/LAYANAN (dari sheet Tarif via endpoint publik) ──
@@ -2947,6 +2995,7 @@ async function openModulModal(row) {
   document.getElementById("mf-file").value = "";
   document.getElementById("mf-file-info").textContent = "";
   await loadTarifData();
+  await isiSelectJenjang("mf-jenjang", false);
   if (row && row["ID Modul"]) {
     document.getElementById("mf-title").textContent = "Edit Modul";
     document.getElementById("mf-id-modul").value  = row["ID Modul"];
@@ -2955,6 +3004,11 @@ async function openModulModal(row) {
     onMfJenjangChange(row["Mata Pelajaran"] || "");
     document.getElementById("mf-deskripsi").value = row["Deskripsi"] || "";
     document.getElementById("mf-status").value    = row["Status"] || "Aktif";
+    document.getElementById("mf-akses-tutor").value   = row["Akses Tutor"] || "Gratis";
+    document.getElementById("mf-harga-tutor").value   = row["Harga Tutor"] || 0;
+    document.getElementById("mf-akses-peserta").value = row["Akses Peserta"] || "Gratis";
+    document.getElementById("mf-harga-peserta").value = row["Harga Peserta"] || 0;
+    toggleHargaTutorModul(); toggleHargaPesertaModul();
     document.getElementById("mf-file-row").querySelector(".form-label").innerHTML =
       "Ganti File PDF <span style=\"font-weight:400;color:rgba(255,255,255,.4);\">(opsional — kosongkan jika tidak ingin mengganti file)</span>";
   } else {
@@ -2965,6 +3019,11 @@ async function openModulModal(row) {
     onMfJenjangChange();
     document.getElementById("mf-deskripsi").value = "";
     document.getElementById("mf-status").value    = "Aktif";
+    document.getElementById("mf-akses-tutor").value   = "Gratis";
+    document.getElementById("mf-harga-tutor").value   = 0;
+    document.getElementById("mf-akses-peserta").value = "Gratis";
+    document.getElementById("mf-harga-peserta").value = 0;
+    toggleHargaTutorModul(); toggleHargaPesertaModul();
     document.getElementById("mf-file-row").querySelector(".form-label").innerHTML =
       "File PDF * <span style=\"font-weight:400;color:rgba(255,255,255,.4);\">(maks ±15MB)</span>";
   }
@@ -2998,7 +3057,13 @@ async function doSimpanModul() {
   const btn = document.getElementById("mf-submit-btn");
   btn.disabled = true; btn.textContent = "Menyimpan...";
   try {
-    let body = { judul, jenjang, mapel, deskripsi, status };
+    let body = {
+      judul, jenjang, mapel, deskripsi, status,
+      aksesTutor:   document.getElementById("mf-akses-tutor").value,
+      hargaTutor:   document.getElementById("mf-harga-tutor").value,
+      aksesPeserta: document.getElementById("mf-akses-peserta").value,
+      hargaPeserta: document.getElementById("mf-harga-peserta").value
+    };
     if (file) {
       document.getElementById("mf-file-info").textContent = "Mengunggah file...";
       body.fileBase64 = await fileToBase64(file);
@@ -3086,6 +3151,52 @@ async function renderPdfBase64(base64, container) {
 // ═══════════════════════════════════════════
 function rp(n) { return "Rp " + (Number(n) || 0).toLocaleString("id-ID"); }
 
+// ═══════════════════════════════════════════
+//  JENJANG DINAMIS (dari sheet Tarif — termasuk PAUD/TK & Keagamaan/Mengaji)
+// ═══════════════════════════════════════════
+let jenjangListCache = null;
+async function loadJenjangList() {
+  if (jenjangListCache) return jenjangListCache;
+  try {
+    const res = await apiGet("getJenjangList");
+    jenjangListCache = (res.ok && res.data && res.data.length) ? res.data
+      : ["PAUD/TK","SD","SMP","SMA","Mahasiswa","Pascasarjana","Keagamaan","Bahasa Asing","Umum"];
+  } catch (e) {
+    jenjangListCache = ["PAUD/TK","SD","SMP","SMA","Mahasiswa","Pascasarjana","Keagamaan","Bahasa Asing","Umum"];
+  }
+  return jenjangListCache;
+}
+async function isiSelectJenjang(selectId, withSemua) {
+  const list = await loadJenjangList();
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const nilaiLama = sel.value;
+  const opts = list.map(j => `<option value="${j}">${j}</option>`).join("");
+  sel.innerHTML = (withSemua ? `<option value="">Semua Jenjang</option>` : "") + opts;
+  if (nilaiLama && list.includes(nilaiLama)) sel.value = nilaiLama;
+}
+
+// ═══════════════════════════════════════════
+//  TOGGLE HARGA — MODUL (Akses Tutor/Peserta)
+// ═══════════════════════════════════════════
+function toggleHargaTutorModul()   { document.getElementById("mf-harga-tutor-row").style.display   = document.getElementById("mf-akses-tutor").value   === "Berbayar" ? "" : "none"; }
+function toggleHargaPesertaModul() { document.getElementById("mf-harga-peserta-row").style.display = document.getElementById("mf-akses-peserta").value === "Berbayar" ? "" : "none"; }
+
+// ═══════════════════════════════════════════
+//  KIRIM MATERI TERBELI KE WA (admin, sekali klik)
+// ═══════════════════════════════════════════
+async function kirimMateriKeWA(idPesanan) {
+  if (!confirm("Kirim file materi ini ke WhatsApp pembeli sekarang?\\n\\nFile ≤100MB akan dikirim langsung sebagai dokumen PDF. File lebih besar akan dikirim sebagai link Drive.")) return;
+  showLoading("Mengirim materi ke WhatsApp...");
+  try {
+    const res = await apiPost("kirimMateriTerbeli", { idPesanan });
+    hideLoading();
+    if (!res.ok) { toast("Gagal: " + res.error, "error"); return; }
+    toast(res.data.pesan, "success");
+    loadPesananMateri();
+  } catch (e) { hideLoading(); toast("Error: " + e.message, "error"); }
+}
+
 function tempelWatermark(ctx, w, h, teks) {
   ctx.save();
   ctx.translate(w / 2, h / 2);
@@ -3150,6 +3261,7 @@ async function loadWorksheet() {
 
 async function onFilterWsJenjangChange() {
   await loadTarifData();
+  await isiSelectJenjang("filter-ws-jenjang", true);
   const jenjang = document.getElementById("filter-ws-jenjang").value;
   document.getElementById("filter-ws-mapel").innerHTML =
     `<option value="">Semua Mapel</option>` + getMapelOptions(jenjang).map(m => `<option>${m}</option>`).join("");
@@ -3232,6 +3344,7 @@ async function openWorksheetModal(row) {
   document.getElementById("wf-file-info").textContent = "";
   document.getElementById("wf-thumb-prev").style.display = "none";
   await loadTarifData();
+  await isiSelectJenjang("wf-jenjang", false);
 
   const isEdit = row && row["ID Worksheet"];
   document.getElementById("wf-title").textContent = isEdit ? "Edit Worksheet" : "Upload Worksheet";
@@ -3452,7 +3565,7 @@ function filterPesananMateri() {
 function renderPesananTable(rows) {
   const tbody = document.getElementById("tbody-pesanan");
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Belum ada pesanan.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:rgba(255,255,255,.3);">Belum ada pesanan.</td></tr>`;
     return;
   }
   const warna = { "Lunas":"badge-green", "Menunggu Verifikasi":"badge-gold", "Menunggu Pembayaran":"badge-blue", "Batal":"badge-gray" };
@@ -3461,10 +3574,26 @@ function renderPesananTable(rows) {
     const bukti = r["Bukti URL"]
       ? `<a href="${r["Bukti URL"]}" target="_blank" rel="noopener" class="btn-sm-outline">🖼️ Lihat</a>`
       : `<span style="opacity:.35">—</span>`;
-    const aksi = (r["Status"] === "Lunas" || r["Status"] === "Batal")
-      ? `<span style="opacity:.35">—</span>`
+    const lunas = r["Status"] === "Lunas";
+    const batal = r["Status"] === "Batal";
+    const terkirim = String(r["Status Kirim"] || "").trim() === "Terkirim";
+
+    const aksiKonfirmasi = (lunas || batal)
+      ? ""
       : `<button class="btn-sm-outline" onclick="konfirmasiPesanan('${id}')">✅ Konfirmasi</button>
          <button class="btn-sm-outline" style="color:var(--red);border-color:rgba(139,42,42,.3);" onclick="batalkanPesanan('${id}')">✕ Batal</button>`;
+    const aksi = aksiKonfirmasi || `<span style="opacity:.35">—</span>`;
+
+    let kirimCell;
+    if (!lunas) {
+      kirimCell = `<span style="opacity:.3">—</span>`;
+    } else if (terkirim) {
+      kirimCell = `<span class="badge badge-green">✅ Terkirim</span><div style="font-size:10px;opacity:.4;margin-top:3px;">${String(r["Tgl Kirim"]||"").slice(0,16)}</div>
+        <button class="btn-sm-outline" style="margin-top:4px;" onclick="kirimMateriKeWA('${id}')">🔁 Kirim Ulang</button>`;
+    } else {
+      kirimCell = `<button class="btn-sm-outline" onclick="kirimMateriKeWA('${id}')">📤 Kirim ke WA</button>`;
+    }
+
     return `<tr>
       <td style="font-family:monospace;font-size:11.5px;">${id}</td>
       <td>${String(r["Tanggal"]||"").slice(0,16)}</td>
@@ -3474,6 +3603,7 @@ function renderPesananTable(rows) {
       <td>${bukti}</td>
       <td><span class="badge ${warna[r["Status"]]||"badge-gray"}">${r["Status"]||"—"}</span></td>
       <td style="font-family:monospace;font-size:11.5px;">${r["Kode Akses"]||"—"}</td>
+      <td>${kirimCell}</td>
       <td>${aksi}</td>
     </tr>`;
   }).join("");

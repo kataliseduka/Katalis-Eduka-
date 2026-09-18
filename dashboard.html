@@ -363,6 +363,10 @@ body {
 .ws-lock-icon{font-size:26px;}
 .ws-lock-price{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--gold);}
 .ws-lock-note{font-size:10.5px;color:rgba(255,255,255,.45);line-height:1.45;}
+.ws-badge-harga{position:absolute;top:9px;left:9px;background:rgba(10,22,40,.85);backdrop-filter:blur(4px);border:1px solid rgba(201,168,76,.4);
+  color:var(--gold);font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px;}
+.ws-badge-owned{position:absolute;top:9px;left:9px;background:rgba(46,158,107,.9);color:#fff;font-size:10.5px;font-weight:700;
+  padding:4px 9px;border-radius:20px;letter-spacing:.02em;}
 .ws-body{padding:13px 14px 15px;display:flex;flex-direction:column;flex:1;gap:4px;}
 .ws-title{font-weight:700;font-size:13.5px;line-height:1.4;}
 .ws-meta{font-size:10.5px;color:rgba(255,255,255,.4);margin-bottom:8px;}
@@ -712,7 +716,7 @@ body {
         <div class="page-header">
           <div class="page-kicker">Materi</div>
           <h2 class="page-title">Modul <em>Belajar</em></h2>
-          <p class="page-desc">Modul PDF sesuai jenjang dan mata pelajaran yang kamu ikuti. Tampilan saja, tidak bisa diunduh.</p>
+          <p class="page-desc">Modul PDF sesuai jenjang dan mata pelajaran yang kamu ikuti. Modul gratis bisa dipratinjau; modul berbayar bisa diunduh penuh setelah dibeli.</p>
         </div>
         <div class="section-card">
           <div class="sc-body" id="modul-peserta-list">
@@ -927,14 +931,13 @@ body {
         <div class="page-header">
           <div class="page-kicker">Materi</div>
           <h2 class="page-title">Modul <em>Belajar</em></h2>
-          <p class="page-desc">Semua modul yang tersedia — bisa difilter per jenjang &amp; mapel. Tampilan saja, tidak bisa diunduh.</p>
+          <p class="page-desc">Semua modul yang tersedia — bisa difilter per jenjang &amp; mapel. Modul gratis bisa dipratinjau &amp; diunduh; modul berbayar bisa diunduh setelah dibeli.</p>
         </div>
         <div class="section-card">
           <div class="modul-filters">
             <input type="text" id="modul-tutor-search" placeholder="🔍 Cari judul / mapel..." oninput="renderModulTutorList()">
             <select id="modul-tutor-filter-jenjang" onchange="onModulTutorJenjangChange()">
               <option value="">Semua Jenjang</option>
-              <option>SD</option><option>SMP</option><option>SMA</option><option>Mahasiswa</option><option>Umum</option>
             </select>
             <select id="modul-tutor-filter-mapel" onchange="renderModulTutorList()">
               <option value="">Semua Mapel</option>
@@ -951,7 +954,7 @@ body {
         <div class="page-header">
           <div class="page-kicker">Bahan Ajar</div>
           <h2 class="page-title">Lembar <em>Kerja</em></h2>
-          <p class="page-desc">Sebagian worksheet terbuka gratis untuk semua tutor. Worksheet bertanda gembok perlu dibeli dulu sebelum bisa dipratinjau dan dicetak.</p>
+          <p class="page-desc">Semua worksheet bisa dipratinjau. Worksheet gratis bisa langsung dicetak. Worksheet berbayar baru bisa dicetak &amp; diunduh setelah dibeli.</p>
         </div>
         <div class="ws-notice">
           🖨️ <b>Cara mencetak:</b> tekan tombol <b>Cetak</b>, tunggu lembar disiapkan, lalu pilih <b>printer</b> kamu di kotak dialog. Setiap lembar diberi watermark nama &amp; kode cetak, dan aktivitas cetak tercatat di sistem.
@@ -961,7 +964,6 @@ body {
             <input type="text" id="ws-tutor-search" placeholder="🔍 Cari judul / mapel..." oninput="renderWsTutorList()">
             <select id="ws-tutor-filter-jenjang" onchange="onWsTutorJenjangChange()">
               <option value="">Semua Jenjang</option>
-              <option>SD</option><option>SMP</option><option>SMA</option><option>Mahasiswa</option><option>Umum</option>
             </select>
             <select id="ws-tutor-filter-mapel" onchange="renderWsTutorList()">
               <option value="">Semua Mapel</option>
@@ -1088,19 +1090,42 @@ function hideLoading() {
   document.getElementById("loading").classList.remove("show");
 }
 
+async function bacaResponsAman(res) {
+  const teks = await res.text();
+  try {
+    return JSON.parse(teks);
+  } catch (e) {
+    console.error("Respons server bukan JSON:", teks.slice(0, 300));
+    const kemungkinan = res.status === 0 || !res.ok
+      ? "Kemungkinan: kuota Apps Script harian habis, atau URL deployment salah/nonaktif."
+      : "Kemungkinan: file terlalu besar untuk diproses sekaligus, kode Apps Script belum di-deploy ulang (perlu 'New version'), atau kuota Google harian habis.";
+    throw new Error("Server tidak merespons dengan benar (status " + res.status + "). " + kemungkinan + " Coba lagi beberapa saat, atau hubungi admin jika berulang.");
+  }
+}
+
 async function apiPost(action, body = {}) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain" },
-    body: JSON.stringify({ action, token: state.token, ...body })
-  });
-  return res.json();
+  let res;
+  try {
+    res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ action, token: state.token, ...body })
+    });
+  } catch (e) {
+    throw new Error("Tidak bisa menghubungi server. Cek koneksi internet kamu, lalu coba lagi.");
+  }
+  return bacaResponsAman(res);
 }
 
 async function apiGet(action, params = {}) {
   const qs = new URLSearchParams({ action, ...params }).toString();
-  const res = await fetch(API_URL + "?" + qs);
-  return res.json();
+  let res;
+  try {
+    res = await fetch(API_URL + "?" + qs);
+  } catch (e) {
+    throw new Error("Tidak bisa menghubungi server. Cek koneksi internet kamu, lalu coba lagi.");
+  }
+  return bacaResponsAman(res);
 }
 
 // ── DATA MAPEL/LAYANAN (dari sheet Tarif via endpoint publik) ──
@@ -2084,24 +2109,15 @@ async function loadModulPeserta() {
       el.innerHTML = `<div class="empty-state"><div class="es-icon">📚</div>Belum ada modul untuk jenjang/mapel kamu saat ini.</div>`;
       return;
     }
-    // Kelompokkan per mata pelajaran
     const grouped = {};
     modul.forEach(m => {
       const key = m["Mata Pelajaran"] || "Lainnya";
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(m);
+      (grouped[key] = grouped[key] || []).push(m);
     });
     el.innerHTML = Object.keys(grouped).map(mapel => `
       <div class="modul-group-title">📖 ${mapel}</div>
-      <div class="modul-grid">
-        ${grouped[mapel].map(m => `
-          <div class="modul-card">
-            <div class="modul-card-icon">📄</div>
-            <div class="modul-card-title">${m["Judul"]}</div>
-            <div class="modul-card-sub">${m["Jenjang"]||""} ${m["Deskripsi"] ? "· " + m["Deskripsi"] : ""}</div>
-            <button class="modul-card-btn" onclick="openModulViewer('${m["ID Modul"]}','${(m["Judul"]||"").replace(/'/g,"\\'")}')">👁️ Lihat Modul</button>
-          </div>`).join("")}
-      </div>`).join("");
+      <div class="ws-grid">${grouped[mapel].map(m => kartuMateri(m, "modul")).join("")}</div>
+    `).join("");
   } catch(e) {
     el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${e.message}</div>`;
   }
@@ -2116,7 +2132,8 @@ async function loadModulTutor() {
   const el = document.getElementById("modul-tutor-list");
   el.innerHTML = `<div class="empty-state"><div class="es-icon">📚</div>Memuat modul...</div>`;
   await loadTarifData();
-  onModulTutorJenjangChange(); // isi dropdown mapel awal (Semua Jenjang → semua mapel)
+  await isiSelectJenjangDash("modul-tutor-filter-jenjang", true);
+  onModulTutorJenjangChange();
   try {
     const res = await apiPost("getDaftarModulTutor");
     if (!res.ok) { el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${res.error}</div>`; return; }
@@ -2151,15 +2168,7 @@ function renderModulTutorList() {
     el.innerHTML = `<div class="empty-state"><div class="es-icon">📚</div>Tidak ada modul yang cocok.</div>`;
     return;
   }
-  el.innerHTML = `<div class="modul-grid" style="padding:16px 20px;">
-    ${rows.map(m => `
-      <div class="modul-card">
-        <div class="modul-card-icon">📄</div>
-        <div class="modul-card-title">${m["Judul"]}</div>
-        <div class="modul-card-sub">${m["Jenjang"]||""} · ${m["Mata Pelajaran"]||""}</div>
-        <button class="modul-card-btn" onclick="openModulViewer('${m["ID Modul"]}','${(m["Judul"]||"").replace(/'/g,"\\'")}')">👁️ Lihat Modul</button>
-      </div>`).join("")}
-  </div>`;
+  el.innerHTML = `<div class="ws-grid" style="padding:16px 20px;">${rows.map(m => kartuMateri(m, "modul")).join("")}</div>`;
 }
 
 // ═══════════════════════════════════════════
@@ -2241,47 +2250,112 @@ function waAdminLink(pesan) {
   return "https://wa.me/" + String(wa).replace(/\D/g, "") + "?text=" + encodeURIComponent(pesan);
 }
 
-function kartuWorksheet(w) {
-  const id    = w["ID Worksheet"];
-  const judul = (w["Judul"] || "").replace(/'/g, "\\'");
-  const thumb = w["Thumb URL"]
-    ? `<img src="${w["Thumb URL"]}" alt="" loading="lazy" draggable="false" oncontextmenu="return false;">`
-    : `<div class="ws-noimg">📝</div>`;
-  const kunci = w.terkunci
-    ? `<div class="ws-lock">
-         <div class="ws-lock-icon">🔒</div>
-         <div class="ws-lock-price">${rpWs(w.harga)}</div>
-         <div class="ws-lock-note">Beli sekali,<br>akses selamanya</div>
-       </div>` : "";
-  const hal   = w["Jumlah Halaman"] ? `${w["Jumlah Halaman"]} hal` : "";
-  const meta  = [w["Jenjang"], w["Mata Pelajaran"], hal].filter(Boolean).join(" · ");
-  const batas = Number(w["Batas Cetak"]) > 0
-    ? `<div class="ws-quota">Batas cetak ${w["Batas Cetak"]}×</div>` : "";
+function kartuMateri(item, jenis) {
+  // jenis: "worksheet" | "modul"
+  const idKey  = jenis === "worksheet" ? "ID Worksheet" : "ID Modul";
+  const id     = item[idKey];
+  const judul  = (item["Judul"] || "").replace(/'/g, "\\'");
+  const thumb  = item["Thumb URL"]
+    ? `<img src="${item["Thumb URL"]}" alt="" loading="lazy" draggable="false" oncontextmenu="return false;">`
+    : `<div class="ws-noimg">${jenis === "worksheet" ? "📝" : "📚"}</div>`;
 
-  const aksi = w.terkunci
-    ? `<button class="ws-btn ws-btn-buy" onclick="bukaModalBeli('${id}','${judul}',${Number(w.harga)||0})">🔒 Beli Akses</button>`
-    : `<button class="ws-btn ws-btn-view" onclick="bukaWsViewer('${id}','${judul}')">👁️ Lihat</button>
-       <button class="ws-btn ws-btn-print" onclick="cetakWorksheet('${id}','${judul}')">🖨️ Cetak</button>`;
+  const bolehCetak = !!item.bolehCetak;
+  const bolehUnduh = !!item.bolehUnduh;
+  const terkunci   = !!item.terkunci;   // berbayar & belum dibeli (preview tetap boleh)
+  const harga      = Number(item.harga) || 0;
+
+  const pita = terkunci
+    ? `<div class="ws-badge-harga">💰 ${rpWs(harga)}</div>`
+    : (bolehUnduh ? `<div class="ws-badge-owned">✓ Dimiliki</div>` : "");
+
+  const hal   = item["Jumlah Halaman"] ? `${item["Jumlah Halaman"]} hal` : "";
+  const meta  = [item["Jenjang"], item["Mata Pelajaran"], hal].filter(Boolean).join(" · ");
+  const batas = (jenis === "worksheet" && Number(item["Batas Cetak"]) > 0)
+    ? `<div class="ws-quota">Batas cetak ${item["Batas Cetak"]}×</div>` : "";
+
+  let tombolAksi = `<button class="ws-btn ws-btn-view" onclick="bukaViewerMateri('${jenis}','${id}','${judul}')">👁️ Lihat</button>`;
+  if (jenis === "worksheet" && bolehCetak) {
+    tombolAksi += `<button class="ws-btn ws-btn-print" onclick="cetakWorksheet('${id}','${judul}')">🖨️ Cetak</button>`;
+  }
+  if (bolehUnduh) {
+    tombolAksi += `<button class="ws-btn ws-btn-buy" onclick="unduhMateri('${jenis}','${id}','${judul}')">⬇️ Unduh</button>`;
+  } else if (terkunci) {
+    tombolAksi += `<button class="ws-btn ws-btn-buy" onclick="bukaModalBeli('${jenis}','${id}','${judul}',${harga})">🔒 Beli Akses</button>`;
+  }
 
   return `<div class="ws-card">
-    <div class="ws-thumb">${thumb}${kunci}</div>
+    <div class="ws-thumb">${thumb}${pita}</div>
     <div class="ws-body">
-      <div class="ws-title">${w["Judul"] || "—"}</div>
+      <div class="ws-title">${item["Judul"] || "—"}</div>
       <div class="ws-meta">${meta}</div>
-      <div class="ws-actions">${aksi}</div>
+      <div class="ws-actions">${tombolAksi}</div>
       ${batas}
     </div>
   </div>`;
 }
 
-function bukaModalBeli(id, judul, harga) {
+function bukaModalBeli(jenis, id, judul, harga) {
+  const label = jenis === "worksheet" ? "worksheet" : "modul";
   document.getElementById("wsb-title").textContent = judul;
   document.getElementById("wsb-harga").textContent = rpWs(harga);
   document.getElementById("wsb-desc").textContent =
-    "Worksheet ini bagian dari koleksi berbayar Katalis Eduka. Hubungi admin untuk membeli aksesnya.";
+    "Materi ini bagian dari koleksi berbayar Katalis Eduka. Setelah dibeli, kamu bisa mencetak (untuk worksheet) dan mengunduh filenya.";
   document.getElementById("wsb-wa").href = waAdminLink(
-    `Halo Admin Katalis Eduka, saya ${state.nama || ""} (${state.id || ""}) ingin membeli akses worksheet "${judul}" (${id}) seharga ${rpWs(harga)}. Mohon info pembayarannya.`);
+    `Halo Admin Katalis Eduka, saya ${state.nama || ""} (${state.id || ""}) ingin membeli akses ${label} "${judul}" (${id}) seharga ${rpWs(harga)}. Mohon info pembayarannya.`);
   document.getElementById("modal-ws-beli").classList.add("show");
+}
+
+// ═══════════════════════════════════════════
+//  JENJANG DINAMIS (dashboard) — dari sheet Tarif
+// ═══════════════════════════════════════════
+let jenjangListCacheDash = null;
+async function loadJenjangListDash() {
+  if (jenjangListCacheDash) return jenjangListCacheDash;
+  try {
+    const res = await apiGet("getJenjangList");
+    jenjangListCacheDash = (res.ok && res.data && res.data.length) ? res.data
+      : ["PAUD/TK","SD","SMP","SMA","Mahasiswa","Pascasarjana","Keagamaan","Bahasa Asing","Umum"];
+  } catch (e) {
+    jenjangListCacheDash = ["PAUD/TK","SD","SMP","SMA","Mahasiswa","Pascasarjana","Keagamaan","Bahasa Asing","Umum"];
+  }
+  return jenjangListCacheDash;
+}
+async function isiSelectJenjangDash(selectId, withSemua) {
+  const list = await loadJenjangListDash();
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const nilaiLama = sel.value;
+  sel.innerHTML = (withSemua ? `<option value="">Semua Jenjang</option>` : "") + list.map(j => `<option value="${j}">${j}</option>`).join("");
+  if (nilaiLama && list.includes(nilaiLama)) sel.value = nilaiLama;
+}
+
+// ═══════════════════════════════════════════
+//  UNDUH MATERI TERBELI (worksheet & modul)
+// ═══════════════════════════════════════════
+function base64KeBlobDanUnduh(base64, judul) {
+  const raw = atob(base64);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  const blob = new Blob([bytes], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (judul || "materi").replace(/[\\/:*?"<>|]/g, "-") + ".pdf";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+async function unduhMateri(jenis, id, judul) {
+  showLoading("Menyiapkan file untuk diunduh...");
+  try {
+    const res = await apiPost("unduhMateriFile", { jenis, idItem: id });
+    hideLoading();
+    if (!res.ok) { toast(res.error || "Gagal mengunduh.", "error"); return; }
+    base64KeBlobDanUnduh(res.data.base64, res.data.judul || judul);
+    toast("File berhasil diunduh.", "success");
+  } catch (e) { hideLoading(); toast("Error: " + e.message, "error"); }
 }
 
 
@@ -2306,7 +2380,7 @@ async function loadWsPeserta() {
     });
     el.innerHTML = Object.keys(grup).map(mapel => `
       <div class="modul-group-title">📝 ${mapel}</div>
-      <div class="ws-grid">${grup[mapel].map(w => kartuWorksheet(w)).join("")}</div>
+      <div class="ws-grid">${grup[mapel].map(w => kartuMateri(w, "worksheet")).join("")}</div>
     `).join("");
   } catch (e) {
     el.innerHTML = `<div class="empty-state"><div class="es-icon">❌</div>${e.message}</div>`;
@@ -2321,6 +2395,7 @@ async function loadWsTutor() {
   const el = document.getElementById("ws-tutor-list");
   el.innerHTML = `<div class="empty-state"><div class="es-icon">📝</div>Memuat worksheet...</div>`;
   await loadTarifData();
+  await isiSelectJenjangDash("ws-tutor-filter-jenjang", true);
   onWsTutorJenjangChange();
   try {
     const res = await apiPost("getDaftarWorksheetTutor");
@@ -2363,13 +2438,18 @@ function renderWsTutorList() {
   const jmlKunci = rows.filter(w => w.terkunci).length;
   const info = jmlKunci
     ? `<div style="padding:14px 20px 0;font-size:11.5px;color:rgba(255,255,255,.4);">${rows.length - jmlKunci} terbuka · ${jmlKunci} berbayar</div>` : "";
-  el.innerHTML = info + `<div class="ws-grid" style="padding:16px 20px;">${rows.map(w => kartuWorksheet(w)).join("")}</div>`;
+  el.innerHTML = info + `<div class="ws-grid" style="padding:16px 20px;">${rows.map(w => kartuMateri(w, "worksheet")).join("")}</div>`;
 }
 
 
 // ═══════════════════════════════════════════
 //  VIEWER WORKSHEET
 // ═══════════════════════════════════════════
+async function bukaViewerMateri(jenis, id, judul) {
+  if (jenis === "worksheet") return bukaWsViewer(id, judul);
+  return openModulViewer(id, judul);
+}
+
 async function bukaWsViewer(id, judul) {
   wsAktif = { id, judul };
   document.getElementById("wsv-title").textContent = judul || "Pratinjau Worksheet";
